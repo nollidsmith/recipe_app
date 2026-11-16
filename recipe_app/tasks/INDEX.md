@@ -24,3 +24,7 @@
 - 1.1 Implement authentication UI and session protection — completed (T-002)
 - 1.2 Verify authentication providers and recovery flow — in progress (T-003)
 
+## Section 2 — Database
+
+- 2.1 Create initial Supabase migration — in progress (T-004)
+
