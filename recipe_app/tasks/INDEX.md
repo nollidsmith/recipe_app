@@ -21,5 +21,6 @@
 
 ## Section 1 — Authentication
 
-- 1.1 Implement authentication UI and session protection — in progress (T-002)
+- 1.1 Implement authentication UI and session protection — completed (T-002)
+- 1.2 Verify authentication providers and recovery flow — in progress (T-003)
 
