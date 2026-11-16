@@ -1,20 +1,29 @@
-function App() {
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider, useAuth } from "./app/AuthProvider";
+import HubPage from "./app/HubPage";
+import LoginPage from "./app/LoginPage";
+import ProtectedRoute from "./app/ProtectedRoute";
+
+function LoadingScreen() {
+  return <main className="loading-shell"><div className="loading-mark">PP</div><p>Opening your kitchen…</p></main>;
+}
+
+function AppRoutes() {
+  const { loading } = useAuth();
+  if (loading) return <LoadingScreen />;
   return (
-    <main className="app-shell">
-      <section className="app-card" aria-labelledby="app-title">
-        <p className="eyebrow">PantryPilot</p>
-        <h1 id="app-title">Your recipes, pantry, and next meal in one place.</h1>
-        <p className="intro">
-          The application foundation is ready. Authentication, recipes, pantry tracking,
-          and shopping suggestions will be added in the next sections.
-        </p>
-        <div className="status-row" aria-label="Foundation status">
-          <span className="status-dot" />
-          Section 0 scaffold ready
-        </div>
-      </section>
-    </main>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<HubPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
+}
+
+function App() {
+  return <BrowserRouter><AuthProvider><AppRoutes /></AuthProvider></BrowserRouter>;
 }
 
 export default App;
