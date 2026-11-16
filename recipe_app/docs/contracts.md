@@ -21,7 +21,7 @@ This is the initial exhaustive inventory for the planned static MVP. Any new rou
 - `VITE_SUPABASE_URL` — required client Supabase project URL
 - `VITE_SUPABASE_ANON_KEY` — required publishable Supabase key
 - `VITE_APP_ENV` — development, preview, or production
-- `VITE_APP_URL` — canonical app URL
+- `VITE_APP_URL` — canonical app URL; production value `https://recipe.dillonlsmith.com`
 
 No service-role, database-password, or OAuth client secret may be a Vite client variable.
 
@@ -32,7 +32,7 @@ No service-role, database-password, or OAuth client secret may be a Vite client 
 - Apple OAuth
 - Password-reset request and callback
 - Session refresh and logout
-- OAuth redirect allowlist for local, preview, and production; preview/production values UNKNOWN
+- OAuth redirect allowlist: `http://localhost:5173`, preview URL UNKNOWN, and `https://recipe.dillonlsmith.com`
 - Account linking behavior: UNKNOWN — needs human confirmation
 
 ## Storage contract

@@ -6,7 +6,7 @@
 
 - Development: local Vite server connected to a development Supabase project
 - Preview: GitHub branch build or manual Hostinger preview; exact preview method UNKNOWN
-- Production: Vite build uploaded to Hostinger shared hosting and served from the PantryPilot domain
+- Production: Vite build uploaded to Hostinger shared hosting and served from `https://recipe.dillonlsmith.com`
 
 ## Release flow
 

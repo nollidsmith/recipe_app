@@ -12,11 +12,11 @@
 ## Local setup
 
 1. Clone the repository.
-2. Install dependencies with the package manager documented by the scaffold.
+2. Install dependencies with `npm install`.
 3. Copy `.env.example` to `.env.local`.
 4. Add development Supabase values.
 5. Run migrations or database setup commands.
-6. Start the Vite development server.
+6. Start the Vite development server with `npm run dev`.
 7. Run the check and test commands before opening a pull request.
 
 ## Workflow

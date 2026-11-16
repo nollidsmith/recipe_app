@@ -44,7 +44,7 @@ Supabase Auth is the identity source. OAuth uses the client library’s PKCE/ses
 
 - `http://localhost:5173` — local development
 - Preview URL — UNKNOWN — needs human confirmation
-- Production Hostinger domain — UNKNOWN — needs human confirmation
+- Production Hostinger domain — `https://recipe.dillonlsmith.com`
 
 OAuth cancellation, provider failure, expired sessions, account linking, email verification, and password-reset behavior must have documented UI states before Section 1 implementation.
 
