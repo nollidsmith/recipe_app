@@ -51,6 +51,7 @@ h1, h2 {
 }
 
 .auth-shell { display: grid; min-height: 100vh; grid-template-columns: 1fr 0.9fr; background: radial-gradient(circle at 0 0, rgba(36, 97, 190, .3), transparent 38%), #080a0f; }
+.auth-shell-single { grid-template-columns: 1fr; }
 .auth-panel { min-height: 100vh; padding: clamp(30px, 7vw, 100px); position: relative; overflow: hidden; }
 .auth-brand-panel { display: flex; flex-direction: column; justify-content: center; background: linear-gradient(145deg, rgba(20, 29, 48, .92), rgba(9, 11, 18, .9)); border-right: 1px solid rgba(255,255,255,.08); }
 .auth-brand-panel h1 { position: relative; z-index: 1; max-width: 680px; font-size: clamp(3rem, 6vw, 6.8rem); }

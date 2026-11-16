@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./app/AuthProvider";
 import HubPage from "./app/HubPage";
 import LoginPage from "./app/LoginPage";
 import ProtectedRoute from "./app/ProtectedRoute";
+import ResetPasswordPage from "./app/ResetPasswordPage";
 
 function LoadingScreen() {
   return <main className="loading-shell"><div className="loading-mark">PP</div><p>Opening your kitchen…</p></main>;
@@ -14,6 +15,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<HubPage />} />
       </Route>
