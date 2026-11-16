@@ -7,13 +7,14 @@
 | UI | React | Component-based interface for recipes, pantry, and forms |
 | Language | TypeScript | Safer data contracts and refactoring |
 | Build tool | Vite | Produces static assets compatible with Hostinger shared hosting |
-| Styling | CSS or Tailwind CSS | Responsive red/black/blue design system |
+| Styling | Plain CSS | Readable, direct red/black/blue design system with minimal build complexity |
 | Auth | Supabase Auth | Email/password, Google, and Apple login |
 | Database | Supabase PostgreSQL | Relational recipe, ingredient, and inventory data |
 | File storage | Supabase Storage | Authenticated user recipe images |
 | CI | GitHub Actions | Repeatable checks on pull requests and `main` |
 | Hosting | Hostinger shared hosting | Serves the generated static files and owns the domain |
 | Source control | GitHub | Code review, history, and CI |
+| Package manager | npm | Standard Node.js workflow and simplest GitHub Actions setup |
 
 ## Non-decisions
 
