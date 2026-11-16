@@ -19,3 +19,7 @@
 - 0.15 Define image handling — completed
 - 0.16 Complete Section 0 review — proposed
 
+## Section 1 — Authentication
+
+- 1.1 Implement authentication UI and session protection — in progress (T-002)
+
