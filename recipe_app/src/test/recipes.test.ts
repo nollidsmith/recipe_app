@@ -6,7 +6,7 @@ const { mockSupabase } = vi.hoisted(() => ({
 
 vi.mock("../lib/supabase", () => ({ supabase: mockSupabase }));
 
-import { createRecipe, listRecipes } from "../lib/recipes";
+import { createRecipe, listRecipes, validateRecipeImage } from "../lib/recipes";
 
 describe("recipe data access", () => {
   it("lists recipes and normalizes missing ingredients", async () => {
@@ -19,7 +19,7 @@ describe("recipe data access", () => {
     });
 
     await expect(listRecipes()).resolves.toEqual([
-      { id: "recipe-1", title: "Pasta", recipe_ingredients: [] },
+      { id: "recipe-1", title: "Pasta", recipe_ingredients: [], image_url: null },
     ]);
     expect(mockSupabase.from).toHaveBeenCalledWith("recipes");
   });
@@ -62,5 +62,10 @@ describe("recipe data access", () => {
     expect(ingredientInsert).toHaveBeenCalledWith([
       expect.objectContaining({ recipe_id: "recipe-1", name: "Tomato", position: 0 }),
     ]);
+  });
+
+  it("validates supported recipe image types and size", () => {
+    expect(() => validateRecipeImage(new File(["image"], "recipe.webp", { type: "image/webp" }))).not.toThrow();
+    expect(() => validateRecipeImage(new File(["text"], "recipe.gif", { type: "image/gif" }))).toThrow("JPEG, PNG, or WebP");
   });
 });

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createRecipe } from "../lib/recipes";
+import { createRecipe, deleteRecipe, uploadRecipeImage, validateRecipeImage } from "../lib/recipes";
 import type { Difficulty, RecipeDraft } from "../types/recipe";
 
 const emptyIngredient = { name: "", quantity: null, unit: "", notes: "" };
@@ -21,6 +21,8 @@ export default function RecipeFormPage() {
   const [draft, setDraft] = useState<RecipeDraft>(initialDraft);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   const update = <K extends keyof RecipeDraft>(field: K, value: RecipeDraft[K]) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -49,10 +51,13 @@ export default function RecipeFormPage() {
     }
 
     setBusy(true);
+    let recipeId = "";
     try {
-      await createRecipe(draft);
+      recipeId = await createRecipe(draft);
+      if (imageFile) await uploadRecipeImage(recipeId, imageFile);
       navigate("/", { replace: true });
     } catch (caught) {
+      if (recipeId) await deleteRecipe(recipeId).catch(() => undefined);
       setError(caught instanceof Error ? caught.message : "Unable to save this recipe.");
       setBusy(false);
     }
@@ -79,6 +84,31 @@ export default function RecipeFormPage() {
             <label>Servings<input type="number" min="1" value={draft.servings} onChange={(event) => update("servings", event.target.value)} /></label>
           </div>
           <label>Difficulty<select value={draft.difficulty} onChange={(event) => update("difficulty", event.target.value as Difficulty)}><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></label>
+        </section>
+
+        <section className="form-section">
+          <div className="section-heading"><p className="eyebrow">Add a visual</p><h2>Recipe image</h2></div>
+          <label htmlFor="recipe-image">Optional image<input id="recipe-image" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => {
+            const file = event.target.files?.[0] ?? null;
+            setError("");
+            if (!file) {
+              setImageFile(null);
+              setImagePreview("");
+              return;
+            }
+            try {
+              validateRecipeImage(file);
+              setImageFile(file);
+              setImagePreview(URL.createObjectURL(file));
+            } catch (caught) {
+              event.target.value = "";
+              setImageFile(null);
+              setImagePreview("");
+              setError(caught instanceof Error ? caught.message : "Unable to use that image.");
+            }
+          }} /></label>
+          {imagePreview && <div className="image-preview"><img src={imagePreview} alt="Recipe preview" /><button className="text-button" type="button" onClick={() => { setImageFile(null); setImagePreview(""); }}>Remove image</button></div>}
+          <p className="muted form-help">JPEG, PNG, or WebP up to 5 MB.</p>
         </section>
 
         <section className="form-section">

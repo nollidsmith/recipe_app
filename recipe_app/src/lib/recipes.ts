@@ -1,6 +1,10 @@
 import { supabase } from "./supabase";
 import type { Recipe, RecipeDraft, RecipeIngredient } from "../types/recipe";
 
+export const RECIPE_IMAGE_BUCKET = "recipe-images";
+const MAX_RECIPE_IMAGE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_RECIPE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
 type RecipeRow = Omit<Recipe, "recipe_ingredients"> & {
   recipe_ingredients: RecipeIngredient[] | null;
 };
@@ -18,10 +22,62 @@ export async function listRecipes() {
     .order("updated_at", { ascending: false });
 
   if (error) throw error;
-  return ((data ?? []) as RecipeRow[]).map((recipe) => ({
+  const recipes = ((data ?? []) as RecipeRow[]).map((recipe) => ({
     ...recipe,
     recipe_ingredients: recipe.recipe_ingredients ?? [],
   }));
+
+  return Promise.all(recipes.map(async (recipe) => ({
+    ...recipe,
+    image_url: recipe.image_path ? await getRecipeImageUrl(recipe.image_path) : null,
+  })));
+}
+
+export function validateRecipeImage(file: File) {
+  if (!ALLOWED_RECIPE_IMAGE_TYPES.has(file.type)) {
+    throw new Error("Choose a JPEG, PNG, or WebP image.");
+  }
+  if (file.size > MAX_RECIPE_IMAGE_BYTES) {
+    throw new Error("Recipe images must be 5 MB or smaller.");
+  }
+}
+
+function imageExtension(file: File) {
+  return file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
+}
+
+export async function uploadRecipeImage(recipeId: string, file: File) {
+  validateRecipeImage(file);
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!userData.user) throw new Error("Your session has expired. Sign in again before uploading an image.");
+
+  const path = `${userData.user.id}/recipes/${recipeId}/${crypto.randomUUID()}.${imageExtension(file)}`;
+  const { error: uploadError } = await supabase.storage
+    .from(RECIPE_IMAGE_BUCKET)
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (uploadError) throw uploadError;
+
+  const { error: updateError } = await supabase
+    .from("recipes")
+    .update({ image_path: path })
+    .eq("id", recipeId);
+
+  if (updateError) {
+    await supabase.storage.from(RECIPE_IMAGE_BUCKET).remove([path]);
+    throw updateError;
+  }
+
+  return path;
+}
+
+export async function getRecipeImageUrl(path: string) {
+  const { data, error } = await supabase.storage
+    .from(RECIPE_IMAGE_BUCKET)
+    .createSignedUrl(path, 60 * 60);
+  if (error) throw error;
+  return data.signedUrl;
 }
 
 export async function createRecipe(draft: RecipeDraft) {

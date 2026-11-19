@@ -21,6 +21,7 @@ export type Recipe = {
   servings: number | null;
   difficulty: Difficulty | null;
   image_path: string | null;
+  image_url?: string | null;
   created_at: string;
   updated_at: string;
   recipe_ingredients: RecipeIngredient[];
