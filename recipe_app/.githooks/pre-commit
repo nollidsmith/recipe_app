@@ -133,7 +133,7 @@ placeholder_allowed() {
   return 1
 }
 
-# 2) Unreplaced [insert ... here] placeholders — per file, skipping allowlisted paths.
+# 2) Unreplaced template markers — per file, skipping allowlisted paths.
 #    Split names on newlines only, never glob-expand them, and read each back as a
 #    literal path: else `a b.md`, `AGENT[S].md` or `:(top)x` is checked as some
 #    other path, or none (starter T-014). Names git still quotes can't be read back: block.
@@ -171,7 +171,7 @@ done
 set +f
 IFS=$old_ifs
 if [ "$placeholder_hit" = "1" ]; then
-  red "pre-commit BLOCK: Unreplaced [insert ... here] placeholder in staged content (not in an allowlisted template; see .placeholder-allow)."
+  red "pre-commit BLOCK: Unreplaced template marker in staged content (not in an allowlisted template; see .placeholder-allow)."
   printf '%s' "$ph_where" >&2
   exit 1
 fi
