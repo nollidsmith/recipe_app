@@ -1,6 +1,6 @@
 # PantryPilot UX Baseline
 
-**Status:** Forward-looking Section 0 draft
+**Status:** Section 0 baseline, reconciled to current UI on 2026-11-19
 
 ## Primary user
 
@@ -11,17 +11,16 @@ Home cooks who want one place to remember recipes, understand what is in the pan
 1. Sign up or sign in with email, Google, or Apple.
 2. Land on the recipe hub and see saved recipes or a helpful empty state.
 3. Add a recipe with ingredients, instructions, timing, servings, and an optional image.
-4. Review a recipe and add missing ingredients to the shopping list.
-5. Add pantry items and see low-stock/expiring states.
-6. Review suggestions and mark shopping items complete.
+4. Add pantry items and see low-stock/expiring states.
+5. Use placeholder screens for shopping, popular recipes, and profile.
 
 ## Authentication states
 
-Support validation, loading, success, provider cancellation, provider failure, expired session, email verification, and password-reset states. Every error explains the next action.
+The UI supports validation, loading, success, expired-session, and password-reset states. OAuth provider setup and complete cancellation/failure/email-verification coverage remain unverified.
 
 ## Image-upload journey
 
-Users select an image, see a preview, receive progress feedback, and can cancel or retry. Unsupported type, size failure, network failure, replacement, removal, and abandoned upload states must be explicit. The user may provide alt text; otherwise the UI uses a descriptive fallback based on the recipe title.
+Users select an image, see a local preview, and can remove it. Unsupported type and size failures are surfaced. Progress, cancel/retry, user-provided alt text, and automated abandoned-upload handling are not currently implemented.
 
 ## Required states
 
@@ -37,4 +36,8 @@ Every screen must define loading, empty, success, and actionable error states. D
 ## Accessibility
 
 Target WCAG 2.2 AA. Support keyboard navigation, visible focus, sufficient contrast, responsive touch targets, semantic headings, screen-reader labels, and reduced motion.
+
+Accessibility conformance is a target, not verified compliance; no automated audit, keyboard-navigation test, contrast verification, or screen-reader test is configured. Source verification currently covers local image previews, removal, and reduced-motion CSS. Recipe cards expose inline instructions and deletion; there is no recipe detail/edit screen. Upload progress, cancel/retry, image-dimension validation, pantry-image replacement, and automated accessibility coverage are not implemented.
+
+<!-- update-this-doc-when: src/app/**, src/components/**, src/styles/**, src/test/** -->
 

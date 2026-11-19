@@ -1,6 +1,14 @@
 # PantryPilot Testing Strategy
 
-**Status:** Forward-looking Section 0 draft
+**Status:** Section 0 baseline, reconciled to current suite on 2026-11-19
+
+## Current coverage
+
+The current suite has 5 Vitest/jsdom files and 13 tests covering login flows,
+password reset, recipe form validation/submission, recipe data access and image
+MIME validation, and pantry image MIME validation with pre-insert rejection.
+
+The broader journey lists below are planned coverage, not completed coverage.
 
 ## Required levels
 
@@ -27,5 +35,12 @@
 
 ## CI checks
 
-GitHub Actions must run formatting, linting, TypeScript checks, unit/component tests, integration tests, and a production build. Exact commands are UNKNOWN until the scaffold is installed.
+The root workflow runs procedure checks plus `npm ci`, `npm run typecheck`,
+`npm test`, and `npm run build` from `recipe_app/`. There are currently no
+configured coverage thresholds/reports, formatting or lint checks, live Supabase
+integration tests, end-to-end tests, accessibility automation, RLS/Storage
+security tests, oversized-image tests, or image-dimension tests. The build passes
+with a non-failing approximately 503.10 kB main-bundle warning.
+
+<!-- update-this-doc-when: package.json, src/test/**, scripts/**, .github/workflows/recipe-app-checks.yml -->
 

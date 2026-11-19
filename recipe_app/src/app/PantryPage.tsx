@@ -72,7 +72,7 @@ export default function PantryPage() {
     setError("");
     try {
       const updated = await updatePantryQuantity(item.id, item.quantity + amount);
-      setItems((current) => current.map((currentItem) => currentItem.id === updated.id ? updated : currentItem));
+      setItems((current) => current.map((currentItem) => currentItem.id === updated.id ? { ...updated, image_url: currentItem.image_url } : currentItem));
       notify(`${updated.name} updated.`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to update this stock item.");

@@ -1,10 +1,10 @@
 # PantryPilot Architecture
 
-**Status:** Forward-looking Section 0 draft
+**Status:** Section 0 baseline, reconciled to source on 2026-11-19
 
 ## Purpose
 
-PantryPilot is a browser-based recipe and pantry application. Users authenticate, manage their own recipes, track pantry inventory, and build shopping lists from missing or low-stock ingredients.
+PantryPilot is a browser-based recipe and pantry application. Users authenticate, manage their own recipes, and track pantry inventory. Shopping-list suggestions are planned; the current `/shopping` screen is a placeholder.
 
 ## System shape
 
@@ -12,7 +12,7 @@ PantryPilot is a browser-based recipe and pantry application. Users authenticate
 Browser (React/Vite)
   ├── Supabase Auth (email/password, Google, Apple)
   ├── Supabase PostgreSQL (user-owned data + row-level security)
-  └── Supabase Storage (user recipe images)
+  └── Supabase Storage (user recipe and pantry images)
 
 GitHub → GitHub Actions → Vite build → Hostinger shared hosting
 ```
@@ -22,7 +22,7 @@ The browser is the deployed application. There is no custom Node.js server in th
 ## Security boundaries
 
 - Supabase Auth establishes the user identity.
-- Every user-owned database row carries an ownership key and is protected by row-level security.
+- Every user-owned database row is protected by row-level security; `recipe_ingredients` is owned through its parent recipe rather than carrying its own ownership key.
 - The browser may use only the Supabase project URL and publishable/anonymous key. Service-role keys must never be bundled into Vite output.
 - Image uploads are restricted by authenticated user, file type, size, and storage path.
 - Mutations validate input in the client for usability and at the database/API boundary for truth.
@@ -36,11 +36,11 @@ The browser is the deployed application. There is no custom Node.js server in th
 - `src/types/` — shared TypeScript models and Supabase-generated types
 - `public/images/` — non-user static assets only; user uploads live in Supabase Storage
 
-The app uses client-side routing with an explicit Hostinger SPA fallback. Data access is colocated in feature modules rather than scattered through presentational components.
+The app uses client-side routing. A Hostinger SPA fallback is required but its rewrite configuration is not yet verified. Data access is colocated in feature modules rather than scattered through presentational components.
 
 ## Authentication and OAuth
 
-Supabase Auth is the identity source. OAuth uses the client library’s PKCE/session handling. Redirect origins for local, preview, and production are:
+Supabase Auth is the identity source. OAuth uses the installed client defaults; PKCE is not explicitly configured. Redirect origins for local, preview, and production are:
 
 - `http://localhost:5173` — local development
 - Preview URL — UNKNOWN — needs human confirmation
@@ -56,5 +56,8 @@ User images are stored as files in private `recipe-images` and `pantry-images` S
 
 - Exact Hostinger plan name: UNKNOWN — needs human confirmation.
 - Supabase project URL and production project identity: UNKNOWN — created during setup.
-- Final image size and MIME allowlist: finalized as 5 MB and JPEG/PNG/WebP.
+- Final image size and MIME allowlist: 5 MB and JPEG/PNG/WebP. Dimensions are not validated.
+- Live migration application and cross-user Storage isolation: UNKNOWN — needs human confirmation.
+
+<!-- update-this-doc-when: src/App.tsx, src/lib/supabase.ts, src/lib/*.ts, package.json, supabase/migrations/*.sql, .github/workflows/recipe-app-checks.yml -->
 

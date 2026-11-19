@@ -69,7 +69,7 @@ using (
   and exists (
     select 1
     from public.recipes
-    where recipes.id = ((storage.foldername(name))[3])::uuid
+      where recipes.id::text = (storage.foldername(name))[3]
       and recipes.user_id = (select auth.uid())
   )
 );
@@ -140,7 +140,7 @@ using (
   and exists (
     select 1
     from public.pantry_items
-    where pantry_items.id = ((storage.foldername(name))[3])::uuid
+      where pantry_items.id::text = (storage.foldername(name))[3]
       and pantry_items.user_id = (select auth.uid())
   )
 );
