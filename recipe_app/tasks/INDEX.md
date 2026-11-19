@@ -17,8 +17,8 @@
 - 0.13 Add security configuration — in review
 - 0.14 Configure GitHub protections — completed
 - 0.15 Define image handling — completed
-- 0.16 Complete Section 0 review — in progress (T-016)
-- 0.17 Resolve Section 0 implementation blockers — in progress (T-017)
+- 0.16 Complete Section 0 review — completed (T-016)
+- 0.17 Resolve Section 0 implementation blockers — completed (T-017)
 
 ## Section 1 — Authentication
 
