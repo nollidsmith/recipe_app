@@ -22,9 +22,9 @@ export type Database = {
         Relationships: [{ foreignKeyName: "recipe_ingredients_recipe_id_fkey"; columns: ["recipe_id"]; isOneToOne: false; referencedRelation: "recipes"; referencedColumns: ["id"] }];
       };
       pantry_items: {
-        Row: { id: string; user_id: string; name: string; quantity: number; unit: string; category: string | null; low_stock_threshold: number | null; expires_on: string | null; created_at: string; updated_at: string };
-        Insert: { id?: string; user_id: string; name: string; quantity?: number; unit: string; category?: string | null; low_stock_threshold?: number | null; expires_on?: string | null; created_at?: string; updated_at?: string };
-        Update: { id?: string; user_id?: string; name?: string; quantity?: number; unit?: string; category?: string | null; low_stock_threshold?: number | null; expires_on?: string | null; created_at?: string; updated_at?: string };
+        Row: { id: string; user_id: string; name: string; quantity: number; unit: string; category: string | null; low_stock_threshold: number | null; expires_on: string | null; image_path: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id: string; name: string; quantity?: number; unit: string; category?: string | null; low_stock_threshold?: number | null; expires_on?: string | null; image_path?: string | null; created_at?: string; updated_at?: string };
+        Update: { id?: string; user_id?: string; name?: string; quantity?: number; unit?: string; category?: string | null; low_stock_threshold?: number | null; expires_on?: string | null; image_path?: string | null; created_at?: string; updated_at?: string };
         Relationships: [];
       };
       shopping_list_items: {

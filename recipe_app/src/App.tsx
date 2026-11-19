@@ -5,6 +5,7 @@ import LoginPage from "./app/LoginPage";
 import ProtectedRoute from "./app/ProtectedRoute";
 import ResetPasswordPage from "./app/ResetPasswordPage";
 import RecipeFormPage from "./app/RecipeFormPage";
+import PantryPage from "./app/PantryPage";
 
 function LoadingScreen() {
   return <main className="loading-shell"><div className="loading-mark">PP</div><p>Opening your kitchen…</p></main>;
@@ -20,6 +21,7 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<HubPage />} />
         <Route path="/recipes/new" element={<RecipeFormPage />} />
+        <Route path="/pantry" element={<PantryPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

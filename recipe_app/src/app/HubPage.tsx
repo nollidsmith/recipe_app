@@ -24,7 +24,7 @@ export default function HubPage() {
       {error && <div className="notice error" role="alert">{error}</div>}
       <RecipeHubPage />
       <section className="hub-grid" aria-label="PantryPilot sections">
-        <article className="hub-card accent-red"><span className="card-icon">◒</span><p className="eyebrow">Pantry</p><h2>Know what’s in stock.</h2><p className="muted">Track ingredients and get smart stocking suggestions.</p><Link className="text-link" to="#">Coming next →</Link></article>
+        <article className="hub-card accent-red"><span className="card-icon">◒</span><p className="eyebrow">Pantry</p><h2>Know what’s in stock.</h2><p className="muted">Track ingredients and get smart stocking suggestions.</p><Link className="text-link" to="/pantry">Open stock →</Link></article>
       </section>
       <p className="hub-footer">Signed in as {session?.user.email}</p>
     </main>

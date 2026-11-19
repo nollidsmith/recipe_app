@@ -47,12 +47,13 @@ No service-role, database-password, or OAuth client secret may be a Vite client 
 - Private images use signed URLs when displayed.
 - Service-role key is never exposed to the browser or static build.
 - Replacement and deletion remove the previous owner-scoped object; failed uploads clean up the newly created object. Abandoned-object lifecycle cleanup remains deferred.
+- Pantry item images use the private `pantry-images` bucket with the same MIME and size limits and the path convention `{user_id}/pantry/{pantry_item_id}/{image_id}`.
 
 ## Integrations
 
 - Supabase Auth: email/password, Google OAuth, Apple OAuth
 - Supabase PostgreSQL: application data
-- Supabase Storage: authenticated recipe image files
+- Supabase Storage: authenticated recipe and pantry item image files
 - GitHub Actions: CI checks
 - Hostinger shared hosting: static production files
 - Custom API server: none planned

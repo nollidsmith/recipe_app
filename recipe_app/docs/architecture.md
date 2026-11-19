@@ -50,7 +50,7 @@ OAuth cancellation, provider failure, expired sessions, account linking, email v
 
 ## Image storage
 
-User images are stored as files in the private `recipe-images` Supabase Storage bucket, with only the owner-scoped object path referenced by the recipe record. JPEG, PNG, and WebP files are limited to 5 MB and displayed through one-hour signed URLs. Service-role access is prohibited in the browser; abandoned-object lifecycle cleanup remains deferred.
+User images are stored as files in private `recipe-images` and `pantry-images` Supabase Storage buckets, with only owner-scoped object paths referenced by recipe or pantry records. JPEG, PNG, and WebP files are limited to 5 MB and displayed through one-hour signed URLs. Service-role access is prohibited in the browser; abandoned-object lifecycle cleanup remains deferred.
 
 ## Known unknowns
 

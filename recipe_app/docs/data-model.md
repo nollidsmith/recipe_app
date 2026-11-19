@@ -53,6 +53,7 @@ Constraints: foreign key to `recipes`, unique `(recipe_id, position)`, index on 
 - `category` — controlled or user-defined value: UNKNOWN
 - `low_stock_threshold` — optional numeric value
 - `expires_on` — optional date
+- `image_path` — optional private Supabase Storage path
 - `created_at`, `updated_at` — timestamps
 
 Constraints: non-negative quantity and threshold, index `(user_id, name)`, index `(user_id, expires_on)`.
