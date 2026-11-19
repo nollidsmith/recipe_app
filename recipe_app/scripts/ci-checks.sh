@@ -236,7 +236,7 @@ for sha in $commits; do
   msg=$(git log -1 --format=%B "$sha" 2>/dev/null) || die "git log -1 $sha failed."
   first=$(printf '%s' "$msg" | head -n1)
   case "$first" in
-    Merge*|Revert*|fixup!*|squash!*|amend!*) continue ;;
+    Merge*|merge:*|Revert*|fixup!*|squash!*|amend!*) continue ;;
   esac
   if ! printf '%s' "$msg" | grep -qE '\bT-[0-9]+(\.[0-9]+)?\b'; then
     sfirst=$(se_safe "$first") || die "Sanitizing a commit subject failed."
