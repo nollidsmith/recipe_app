@@ -31,7 +31,7 @@ Every screen must define loading, empty, success, and actionable error states. D
 - Red: primary actions, warnings, and active emphasis
 - Black/deep charcoal: navigation, headings, and structure
 - Blue: information, secondary actions, and supporting highlights
-- Recipe imagery uses a readable overlay and never carries meaning by color alone.
+- Recipe imagery is supplementary content and must never carry meaning by color alone.
 
 ## Accessibility
 
