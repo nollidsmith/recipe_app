@@ -12,7 +12,7 @@
 - 0.8 Create local application scaffold — proposed
 - 0.9 Configure database migrations — proposed
 - 0.10 Install playbook hooks — proposed
-- 0.11 Add GitHub Actions CI — proposed
+- 0.11 Add GitHub Actions CI — in review (T-007)
 - 0.12 Define environments — in review
 - 0.13 Add security configuration — in review
 - 0.14 Configure GitHub protections — proposed
