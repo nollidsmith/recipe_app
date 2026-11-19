@@ -146,10 +146,11 @@ export async function deleteRecipe(id: string) {
     .maybeSingle();
   if (findError) throw findError;
 
+  if (recipe?.image_path) {
+    const { error: removeError } = await supabase.storage.from(RECIPE_IMAGE_BUCKET).remove([recipe.image_path]);
+    if (removeError) throw removeError;
+  }
+
   const { error } = await supabase.from("recipes").delete().eq("id", id);
   if (error) throw error;
-
-  if (recipe?.image_path) {
-    await supabase.storage.from(RECIPE_IMAGE_BUCKET).remove([recipe.image_path]);
-  }
 }

@@ -104,7 +104,12 @@ export async function updatePantryQuantity(id: string, quantity: number) {
 export async function deletePantryItem(id: string) {
   const { data: item, error: findError } = await supabase.from("pantry_items").select("image_path").eq("id", id).maybeSingle();
   if (findError) throw findError;
+
+  if (item?.image_path) {
+    const { error: removeError } = await supabase.storage.from(PANTRY_IMAGE_BUCKET).remove([item.image_path]);
+    if (removeError) throw removeError;
+  }
+
   const { error } = await supabase.from("pantry_items").delete().eq("id", id);
   if (error) throw error;
-  if (item?.image_path) await supabase.storage.from(PANTRY_IMAGE_BUCKET).remove([item.image_path]);
 }
