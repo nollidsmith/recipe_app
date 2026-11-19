@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createRecipe, deleteRecipe, uploadRecipeImage, validateRecipeImage } from "../lib/recipes";
 import type { Difficulty, RecipeDraft } from "../types/recipe";
@@ -23,6 +23,10 @@ export default function RecipeFormPage() {
   const [busy, setBusy] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
+
+  useEffect(() => () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+  }, [imagePreview]);
 
   const update = <K extends keyof RecipeDraft>(field: K, value: RecipeDraft[K]) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -92,22 +96,25 @@ export default function RecipeFormPage() {
             const file = event.target.files?.[0] ?? null;
             setError("");
             if (!file) {
+              if (imagePreview) URL.revokeObjectURL(imagePreview);
               setImageFile(null);
               setImagePreview("");
               return;
             }
             try {
               validateRecipeImage(file);
+              if (imagePreview) URL.revokeObjectURL(imagePreview);
               setImageFile(file);
               setImagePreview(URL.createObjectURL(file));
             } catch (caught) {
               event.target.value = "";
+              if (imagePreview) URL.revokeObjectURL(imagePreview);
               setImageFile(null);
               setImagePreview("");
               setError(caught instanceof Error ? caught.message : "Unable to use that image.");
             }
           }} /></label>
-          {imagePreview && <div className="image-preview"><img src={imagePreview} alt="Recipe preview" /><button className="text-button" type="button" onClick={() => { setImageFile(null); setImagePreview(""); }}>Remove image</button></div>}
+          {imagePreview && <div className="image-preview"><img src={imagePreview} alt="Recipe preview" /><button className="text-button" type="button" onClick={() => { URL.revokeObjectURL(imagePreview); setImageFile(null); setImagePreview(""); }}>Remove image</button></div>}
           <p className="muted form-help">JPEG, PNG, or WebP up to 5 MB.</p>
         </section>
 

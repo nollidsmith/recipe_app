@@ -7,18 +7,18 @@
 - 0.3 Choose authentication and database providers — completed
 - 0.4 Choose deployment provider — completed
 - 0.5 Bootstrap project documentation — in review
-- 0.6 Create project task ledger — in progress
+- 0.6 Create project task ledger — completed
 - 0.7 Add environment template — completed
-- 0.8 Create local application scaffold — proposed
-- 0.9 Configure database migrations — proposed
-- 0.10 Install playbook hooks — proposed
-- 0.11 Add GitHub Actions CI — in review (T-007)
-- 0.11a Wire playbook procedure gates into CI — in review (T-008)
+- 0.8 Create local application scaffold — completed
+- 0.9 Configure database migrations — completed
+- 0.10 Install playbook hooks — completed
+- 0.11 Add GitHub Actions CI — in review (T-008; T-007 complete)
 - 0.12 Define environments — in review
 - 0.13 Add security configuration — in review
-- 0.14 Configure GitHub protections — proposed
+- 0.14 Configure GitHub protections — completed
 - 0.15 Define image handling — completed
-- 0.16 Complete Section 0 review — proposed
+- 0.16 Complete Section 0 review — completed (T-016)
+- 0.17 Resolve Section 0 implementation blockers — completed (T-017)
 
 ## Section 1 — Authentication
 

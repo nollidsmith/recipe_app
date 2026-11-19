@@ -39,6 +39,9 @@ target=$(git rev-parse --verify --quiet "$target_arg^{commit}") \
 head=$(git rev-parse --verify --quiet "$head_arg^{commit}") \
   || die "Head '$head_arg' does not resolve to a commit."
 
+project_prefix="${CI_PROJECT_PREFIX:-}"
+project_path="${project_prefix:+$project_prefix/}"
+
 tmp=$(mktemp -d 2>/dev/null || mktemp -d -t cipr) || die "mktemp failed."
 cleanup() { rc=$?; rm -rf "$tmp"; exit "$rc"; }   # keep the exit code
 trap cleanup EXIT
@@ -47,24 +50,24 @@ trap 'exit 143' TERM
 
 # The target's gate script must be a regular file. ls-tree prints nothing when the
 # path is absent and fails on a git error, so "missing" and "broken" stay apart.
-entry=$(git ls-tree --full-tree "$target" -- scripts/ci-checks.sh) \
+entry=$(git ls-tree --full-tree "$target" -- "${project_path}scripts/ci-checks.sh") \
   || die "git ls-tree $target failed."
 case "$entry" in
-  '') die "Target $target has no scripts/ci-checks.sh. Land scripts/ on the target branch before requiring this check (ADOPTING.md § 4)." ;;
+  '') die "Target $target has no ${project_path}scripts/ci-checks.sh. Land the procedure gate before requiring this check." ;;
   '100644 blob '*|'100755 blob '*) ;;
   *) die "Target's scripts/ci-checks.sh is not a regular file." ;;
 esac
-git cat-file blob "$target:scripts/ci-checks.sh" > "$tmp/ci-checks.sh" \
+git cat-file blob "$target:${project_path}scripts/ci-checks.sh" > "$tmp/ci-checks.sh" \
   || die "Reading the target's scripts/ci-checks.sh failed."
 
 # Absent allowlist on the target means nothing is allowlisted: an empty file, never
 # a fallback to the PR's own .placeholder-allow.
-entry=$(git ls-tree --full-tree "$target" -- .placeholder-allow) \
+entry=$(git ls-tree --full-tree "$target" -- "${project_path}.placeholder-allow") \
   || die "git ls-tree $target failed."
 case "$entry" in
   '') : > "$tmp/placeholder-allow" ;;
   '100644 blob '*|'100755 blob '*)
-    git cat-file blob "$target:.placeholder-allow" > "$tmp/placeholder-allow" \
+    git cat-file blob "$target:${project_path}.placeholder-allow" > "$tmp/placeholder-allow" \
       || die "Reading the target's .placeholder-allow failed." ;;
   *) die "Target's .placeholder-allow is not a regular file." ;;
 esac

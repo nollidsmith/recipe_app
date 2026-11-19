@@ -1,6 +1,6 @@
 # PantryPilot Ownership
 
-**Status:** Forward-looking Section 0 draft
+**Status:** Section 0 baseline, reconciled to current ownership decisions on 2026-11-19
 
 | Area | Owner |
 |---|---|
@@ -11,4 +11,6 @@
 | Supabase project and OAuth credentials | Repository owner — account identity UNKNOWN |
 
 Update this document when additional maintainers are assigned.
+
+<!-- update-this-doc-when: CODEOWNERS, repository access, maintainer assignments -->
 

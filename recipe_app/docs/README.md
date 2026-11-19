@@ -1,6 +1,6 @@
 # PantryPilot Documentation Index
 
-All documents in this folder are **forward-looking** until the application scaffold, migrations, workflows, and Supabase boundary exist. Unconfirmed details are marked `UNKNOWN — needs human confirmation`.
+Documents are maintained against the current application source, migrations, and workflows. Unconfirmed external-state details are marked `UNKNOWN — needs human confirmation`. Each Section 0 baseline records its reconciliation date; update the affected document whenever its referenced route, environment variable, schema, migration, workflow, or user journey changes.
 
 ## Tier 1
 
@@ -23,3 +23,5 @@ All documents in this folder are **forward-looking** until the application scaff
 - [Runbooks](./runbooks/)
 
 Documentation changes require the playbook’s unanimous 9-agent consensus and human approval before landing.
+
+<!-- update-this-doc-when: any file listed in the documentation index or the playbook documentation protocol -->

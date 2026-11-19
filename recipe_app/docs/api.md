@@ -1,6 +1,6 @@
 # PantryPilot Data Access and API Contract
 
-**Status:** Forward-looking Section 0 draft
+**Status:** Section 0 baseline, reconciled to source on 2026-11-19
 
 PantryPilot has no custom HTTP API in the shared-hosting MVP. The browser calls Supabase Auth, PostgREST/database operations, and Storage through a dedicated client module. There are no custom routes, RPCs, Edge Functions, webhooks, or external API integrations in the initial release: none planned.
 
@@ -18,14 +18,12 @@ OAuth configuration must include local, preview, and production redirect URLs. E
 
 ## Data operations
 
-- List, create, read, update, and delete the current user’s recipes
-- List, create, update, and delete ingredients belonging to the current user’s recipes
-- List, create, update, and delete the current user’s pantry items
-- List, create, complete, and delete the current user’s shopping-list items
-- Add/remove favorites for the current user’s recipes
-- Upload, replace, and delete the current user’s recipe images
+- Current source implements listing/creating/deleting recipes, creating/deleting pantry items plus quantity updates, and recipe/pantry image reads/uploads/deletes where the UI exposes them.
+- Shopping-list, favorites, recipe editing/detail, and full ingredient CRUD are planned data operations, not current UI contracts.
 
-Storage operations require an authenticated session, an owner-scoped path, MIME/extension validation, a maximum size limit, safe filenames, and cleanup of replaced or abandoned objects. Exact limits and bucket name are UNKNOWN — needs human confirmation.
+Storage operations require an authenticated session, an exact owner-scoped path, MIME validation, and a 5 MB maximum. Buckets are private `recipe-images` and `pantry-images`; signed URLs are used for display. Live migration application and cross-user isolation remain UNKNOWN until verified against Supabase.
+
+The storage hardening migration does not prove that the hosted Supabase project has received the policy changes.
 
 ## Validation
 
@@ -36,4 +34,6 @@ Storage operations require an authenticated session, an owner-scoped path, MIME/
 ## Future boundary
 
 If server-side logic becomes necessary, it must be introduced as a documented service boundary rather than hidden inside UI components.
+
+<!-- update-this-doc-when: src/lib/*.ts, src/app/*.tsx, src/types/*.ts, supabase/migrations/*.sql -->
 

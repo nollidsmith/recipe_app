@@ -1,6 +1,6 @@
 # PantryPilot Domain
 
-**Status:** Forward-looking Tier 2 draft
+**Status:** Tier 2 baseline, reconciled to current domain terms on 2026-11-19
 
 ## Entities
 
@@ -18,5 +18,7 @@
 - A user cannot access another user’s data.
 - A recipe ingredient cannot exist without its recipe.
 - Suggestions are derived from recipe and pantry data.
-- Pantry quantities and shopping quantities use explicit units.
+- Pantry quantities use explicit units; shopping-list units are optional in the implemented schema.
 - Image files are not the source of recipe data.
+
+<!-- update-this-doc-when: src/app/**, src/lib/**, src/types/**, supabase/migrations/*.sql -->

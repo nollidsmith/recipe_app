@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+set -e
+CI_PROJECT_PREFIX=recipe_app CI_PLACEHOLDER_ALLOW=recipe_app/.placeholder-allow exec sh recipe_app/.githooks/pre-commit "$@"

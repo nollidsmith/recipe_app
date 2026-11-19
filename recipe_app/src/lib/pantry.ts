@@ -30,7 +30,7 @@ export async function listPantryItems() {
   })));
 }
 
-function validatePantryImage(file: File) {
+export function validatePantryImage(file: File) {
   if (!ALLOWED_PANTRY_IMAGE_TYPES.has(file.type)) throw new Error("Choose a JPEG, PNG, or WebP image.");
   if (file.size > MAX_PANTRY_IMAGE_BYTES) throw new Error("Stock images must be 5 MB or smaller.");
 }
@@ -54,6 +54,8 @@ export async function createPantryItem(draft: PantryItemDraft) {
   if (!name) throw new Error("Enter an item name.");
   if (!draft.unit.trim()) throw new Error("Enter a unit.");
 
+  if (draft.image) validatePantryImage(draft.image);
+
   const { data, error } = await supabase
     .from("pantry_items")
     .insert({
@@ -72,7 +74,6 @@ export async function createPantryItem(draft: PantryItemDraft) {
   const item = data as PantryItem;
 
   if (!draft.image) return item;
-  validatePantryImage(draft.image);
   const path = `${userData.user.id}/pantry/${item.id}/${crypto.randomUUID()}.${imageExtension(draft.image)}`;
   const { error: uploadError } = await supabase.storage.from(PANTRY_IMAGE_BUCKET).upload(path, draft.image, { contentType: draft.image.type, upsert: false });
   if (uploadError) {
@@ -103,7 +104,12 @@ export async function updatePantryQuantity(id: string, quantity: number) {
 export async function deletePantryItem(id: string) {
   const { data: item, error: findError } = await supabase.from("pantry_items").select("image_path").eq("id", id).maybeSingle();
   if (findError) throw findError;
+
+  if (item?.image_path) {
+    const { error: removeError } = await supabase.storage.from(PANTRY_IMAGE_BUCKET).remove([item.image_path]);
+    if (removeError) throw removeError;
+  }
+
   const { error } = await supabase.from("pantry_items").delete().eq("id", id);
   if (error) throw error;
-  if (item?.image_path) await supabase.storage.from(PANTRY_IMAGE_BUCKET).remove([item.image_path]);
 }

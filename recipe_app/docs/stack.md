@@ -1,6 +1,6 @@
 # PantryPilot Stack
 
-**Status:** Forward-looking Section 0 draft
+**Status:** Section 0 baseline, reconciled to source on 2026-11-19
 
 | Area | Decision | Reason |
 |---|---|---|
@@ -21,4 +21,6 @@
 - No custom Node.js server is part of the first deployment model.
 - No service-role key is shipped to the browser.
 - No image provider is required for user-uploaded recipe images.
+
+<!-- update-this-doc-when: package.json, src/**, supabase/migrations/*.sql, hosting configuration -->
 
