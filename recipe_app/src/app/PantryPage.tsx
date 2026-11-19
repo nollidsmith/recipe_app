@@ -23,6 +23,7 @@ export default function PantryPage() {
   const [items, setItems] = useState<PantryItem[]>([]);
   const [draft, setDraft] = useState(emptyDraft);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
@@ -38,10 +39,13 @@ export default function PantryPage() {
   };
 
   const loadItems = useCallback(async () => {
+    setLoading(true);
     setError("");
+    setLoadFailed(false);
     try {
       setItems(await listPantryItems());
     } catch (caught) {
+      setLoadFailed(true);
       setError(caught instanceof Error ? caught.message : "Unable to load your stock.");
     } finally {
       setLoading(false);
@@ -137,8 +141,9 @@ export default function PantryPage() {
         <section className="pantry-list" aria-labelledby="stock-list-title">
           <div className="section-heading"><p className="eyebrow">Your inventory</p><h2 id="stock-list-title">Stock list</h2></div>
           {loading && <div className="recipe-state">Loading your stock…</div>}
-          {!loading && items.length === 0 && <div className="empty-state"><span className="empty-icon">◒</span><h3>Your stock list is empty.</h3><p className="muted">Add the ingredients and supplies you already have.</p></div>}
-          {!loading && items.length > 0 && <div className="stock-list">{items.map((item) => <article className={`stock-card${isLowStock(item) ? " low-stock" : ""}`} key={item.id}>{item.image_url ? <img className="stock-card-image" src={item.image_url} alt="" /> : <div className="stock-card-placeholder" aria-hidden="true">◒</div>}<div><h3>{item.name}</h3><p className="muted">{item.category || "Uncategorized"}{item.expires_on ? ` · Expires ${item.expires_on}` : ""}</p></div><div className="stock-quantity"><strong>{item.quantity} {item.unit}</strong><div className="quantity-actions"><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, -1)} aria-label={`Decrease ${item.name}`}>−</button><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, 1)} aria-label={`Increase ${item.name}`}>+</button></div></div>{isLowStock(item) && <span className="stock-warning">Low stock</span>}<button className="text-button" type="button" onClick={() => void removeItem(item)}>Delete</button></article>)}</div>}
+          {!loading && loadFailed && <div className="empty-state"><span className="empty-icon">!</span><h3>We couldn’t load your stock.</h3><p className="muted">Check your connection and try again.</p><button className="button button-primary" type="button" onClick={() => void loadItems()}>Try again</button></div>}
+          {!loading && !loadFailed && items.length === 0 && <div className="empty-state"><span className="empty-icon">◒</span><h3>Your stock list is empty.</h3><p className="muted">Add the ingredients and supplies you already have.</p></div>}
+          {!loading && !loadFailed && items.length > 0 && <div className="stock-list">{items.map((item) => <article className={`stock-card${isLowStock(item) ? " low-stock" : ""}`} key={item.id}>{item.image_url ? <img className="stock-card-image" src={item.image_url} alt="" /> : <div className="stock-card-placeholder" aria-hidden="true">◒</div>}<div><h3>{item.name}</h3><p className="muted">{item.category || "Uncategorized"}{item.expires_on ? ` · Expires ${item.expires_on}` : ""}</p></div><div className="stock-quantity"><strong>{item.quantity} {item.unit}</strong><div className="quantity-actions"><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, -1)} aria-label={`Decrease ${item.name}`}>−</button><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, 1)} aria-label={`Increase ${item.name}`}>+</button></div></div>{isLowStock(item) && <span className="stock-warning">Low stock</span>}<button className="text-button" type="button" onClick={() => void removeItem(item)}>Delete</button></article>)}</div>}
         </section>
       </section>
       <MobileNav />
