@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { deleteRecipe, listRecipes } from "../lib/recipes";
 import type { Recipe } from "../types/recipe";
+import Toast from "../components/Toast";
 
 export default function RecipeHubPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [toast, setToast] = useState("");
 
   const loadRecipes = useCallback(async () => {
     setError("");
@@ -26,6 +28,8 @@ export default function RecipeHubPage() {
     try {
       await deleteRecipe(recipe.id);
       setRecipes((current) => current.filter((item) => item.id !== recipe.id));
+      setToast(`${recipe.title} deleted.`);
+      window.setTimeout(() => setToast(""), 2800);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to delete this recipe.");
     }
@@ -33,6 +37,7 @@ export default function RecipeHubPage() {
 
   return (
     <section className="recipe-section" aria-labelledby="recipes-title">
+      <Toast message={toast} />
       <div className="section-heading section-heading-inline"><div><p className="eyebrow">Your collection</p><h2 id="recipes-title">Recipes</h2></div><Link className="button button-primary" to="/recipes/new">+ Add recipe</Link></div>
       {error && <div className="notice error" role="alert">{error}</div>}
       {loading && <div className="recipe-state">Loading your recipes…</div>}

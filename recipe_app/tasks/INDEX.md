@@ -32,3 +32,7 @@
 
 - 3.1 Build recipe list and create flow — completed (T-005)
 
+## Section 4 — Mobile experience
+
+- 4.1 Add mobile navigation and feedback polish — completed (T-006)
+

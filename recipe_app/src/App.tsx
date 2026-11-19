@@ -6,6 +6,7 @@ import ProtectedRoute from "./app/ProtectedRoute";
 import ResetPasswordPage from "./app/ResetPasswordPage";
 import RecipeFormPage from "./app/RecipeFormPage";
 import PantryPage from "./app/PantryPage";
+import ComingSoonPage from "./app/ComingSoonPage";
 
 function LoadingScreen() {
   return <main className="loading-shell"><div className="loading-mark">PP</div><p>Opening your kitchen…</p></main>;
@@ -22,6 +23,9 @@ function AppRoutes() {
         <Route path="/" element={<HubPage />} />
         <Route path="/recipes/new" element={<RecipeFormPage />} />
         <Route path="/pantry" element={<PantryPage />} />
+        <Route path="/shopping" element={<ComingSoonPage title="Shopping list" description="Turn missing and low-stock ingredients into one simple list." />} />
+        <Route path="/popular" element={<ComingSoonPage title="Most popular recipe" description="Popular recipes will appear here once favorites and recipe activity are connected." />} />
+        <Route path="/profile" element={<ComingSoonPage title="Your profile" description="Account settings and preferences are coming next." />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
