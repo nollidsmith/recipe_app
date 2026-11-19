@@ -26,5 +26,9 @@
 
 ## Section 2 — Database
 
-- 2.1 Create initial Supabase migration — in progress (T-004)
+- 2.1 Create initial Supabase migration — completed (T-004)
+
+## Section 3 — Recipes
+
+- 3.1 Build recipe list and create flow — in progress (T-005)
 

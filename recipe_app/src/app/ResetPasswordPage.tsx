@@ -4,12 +4,21 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthProvider";
 
 export default function ResetPasswordPage() {
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  if (loading) {
+    return (
+      <main className="loading-shell">
+        <div className="loading-mark">PP</div>
+        <p>Preparing your password reset…</p>
+      </main>
+    );
+  }
 
   if (!session) return <Navigate to="/login" replace />;
 

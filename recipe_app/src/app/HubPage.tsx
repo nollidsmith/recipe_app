@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
+import RecipeHubPage from "./RecipeHubPage";
 
 export default function HubPage() {
   const { session, signOut } = useAuth();
@@ -20,9 +22,9 @@ export default function HubPage() {
         <button className="button button-secondary" type="button" onClick={logout}>Sign out</button>
       </header>
       {error && <div className="notice error" role="alert">{error}</div>}
+      <RecipeHubPage />
       <section className="hub-grid" aria-label="PantryPilot sections">
-        <article className="hub-card accent-blue"><span className="card-icon">✦</span><p className="eyebrow">Recipes</p><h2>Your recipe book is ready.</h2><p className="muted">Saved recipes and your own creations will live here.</p></article>
-        <article className="hub-card accent-red"><span className="card-icon">◒</span><p className="eyebrow">Pantry</p><h2>Know what’s in stock.</h2><p className="muted">Track ingredients and get smart stocking suggestions.</p></article>
+        <article className="hub-card accent-red"><span className="card-icon">◒</span><p className="eyebrow">Pantry</p><h2>Know what’s in stock.</h2><p className="muted">Track ingredients and get smart stocking suggestions.</p><Link className="text-link" to="#">Coming next →</Link></article>
       </section>
       <p className="hub-footer">Signed in as {session?.user.email}</p>
     </main>
