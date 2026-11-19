@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 import RecipeHubPage from "./RecipeHubPage";
+import MobileNav from "../components/MobileNav";
 
 export default function HubPage() {
   const { session, firstName, signOut } = useAuth();
@@ -27,6 +28,7 @@ export default function HubPage() {
         <article className="hub-card accent-red"><span className="card-icon">◒</span><p className="eyebrow">Pantry</p><h2>Know what’s in stock.</h2><p className="muted">Track ingredients and get smart stocking suggestions.</p><Link className="text-link" to="/pantry">Open stock →</Link></article>
       </section>
       <p className="hub-footer">Signed in as {session?.user.email}</p>
+      <MobileNav />
     </main>
   );
 }

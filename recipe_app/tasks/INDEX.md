@@ -12,7 +12,8 @@
 - 0.8 Create local application scaffold — proposed
 - 0.9 Configure database migrations — proposed
 - 0.10 Install playbook hooks — proposed
-- 0.11 Add GitHub Actions CI — proposed
+- 0.11 Add GitHub Actions CI — in review (T-007)
+- 0.11a Wire playbook procedure gates into CI — in review (T-008)
 - 0.12 Define environments — in review
 - 0.13 Add security configuration — in review
 - 0.14 Configure GitHub protections — proposed
@@ -31,4 +32,8 @@
 ## Section 3 — Recipes
 
 - 3.1 Build recipe list and create flow — completed (T-005)
+
+## Section 4 — Mobile experience
+
+- 4.1 Add mobile navigation and feedback polish — completed (T-006)
 

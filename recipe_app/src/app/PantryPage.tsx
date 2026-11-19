@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { createPantryItem, deletePantryItem, listPantryItems, updatePantryQuantity } from "../lib/pantry";
 import type { PantryItem, PantryItemDraft } from "../types/pantry";
+import MobileNav from "../components/MobileNav";
+import Toast from "../components/Toast";
 
 const emptyDraft: PantryItemDraft = {
   name: "",
@@ -23,6 +25,12 @@ export default function PantryPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [toast, setToast] = useState("");
+
+  const notify = (message: string) => {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2800);
+  };
 
   const loadItems = useCallback(async () => {
     setError("");
@@ -45,6 +53,7 @@ export default function PantryPage() {
       const item = await createPantryItem(draft);
       setItems((current) => [...current, item].sort((left, right) => left.name.localeCompare(right.name)));
       setDraft(emptyDraft);
+      notify(`${item.name} added to stock.`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to add this stock item.");
     } finally {
@@ -57,6 +66,7 @@ export default function PantryPage() {
     try {
       const updated = await updatePantryQuantity(item.id, item.quantity + amount);
       setItems((current) => current.map((currentItem) => currentItem.id === updated.id ? updated : currentItem));
+      notify(`${updated.name} updated.`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to update this stock item.");
     }
@@ -67,6 +77,7 @@ export default function PantryPage() {
     try {
       await deletePantryItem(item.id);
       setItems((current) => current.filter((currentItem) => currentItem.id !== item.id));
+      notify(`${item.name} removed from stock.`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to delete this stock item.");
     }
@@ -74,6 +85,7 @@ export default function PantryPage() {
 
   return (
     <main className="pantry-shell">
+      <Toast message={toast} />
       <header className="recipe-editor-header">
         <div><p className="eyebrow">PantryPilot / Stock</p><h1>What’s in stock?</h1><p className="muted">Keep a simple view of what you have before you plan your next meal.</p></div>
         <Link className="button button-secondary" to="/">Back to kitchen</Link>
@@ -100,6 +112,7 @@ export default function PantryPage() {
           {!loading && items.length > 0 && <div className="stock-list">{items.map((item) => <article className={`stock-card${isLowStock(item) ? " low-stock" : ""}`} key={item.id}>{item.image_url ? <img className="stock-card-image" src={item.image_url} alt="" /> : <div className="stock-card-placeholder" aria-hidden="true">◒</div>}<div><h3>{item.name}</h3><p className="muted">{item.category || "Uncategorized"}{item.expires_on ? ` · Expires ${item.expires_on}` : ""}</p></div><div className="stock-quantity"><strong>{item.quantity} {item.unit}</strong><div className="quantity-actions"><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, -1)} aria-label={`Decrease ${item.name}`}>−</button><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, 1)} aria-label={`Increase ${item.name}`}>+</button></div></div>{isLowStock(item) && <span className="stock-warning">Low stock</span>}<button className="text-button" type="button" onClick={() => void removeItem(item)}>Delete</button></article>)}</div>}
         </section>
       </section>
+      <MobileNav />
     </main>
   );
 }
