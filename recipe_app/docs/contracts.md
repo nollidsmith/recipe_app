@@ -34,6 +34,7 @@ No service-role, database-password, or OAuth client secret may be a Vite client 
 - Session refresh and logout
 - OAuth redirect allowlist: `http://localhost:5173`, preview URL UNKNOWN, and `https://recipe.dillonlsmith.com`
 - Account linking behavior: UNKNOWN — needs human confirmation
+- Signup profile data: first name is required for email account creation and stored in `profiles.display_name`.
 
 ## Storage contract
 

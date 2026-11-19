@@ -4,7 +4,7 @@ import { useAuth } from "./AuthProvider";
 import RecipeHubPage from "./RecipeHubPage";
 
 export default function HubPage() {
-  const { session, signOut } = useAuth();
+  const { session, firstName, signOut } = useAuth();
   const [error, setError] = useState("");
 
   const logout = async () => {
@@ -18,7 +18,7 @@ export default function HubPage() {
   return (
     <main className="hub-shell">
       <header className="hub-header">
-        <div><p className="eyebrow">PantryPilot</p><h1>Your kitchen hub</h1></div>
+        <div><p className="eyebrow">PantryPilot</p><h1>Welcome back{firstName ? `, ${firstName}` : ""}</h1><p className="muted">Your recipes, pantry, and next meal in one calm command center.</p></div>
         <button className="button button-secondary" type="button" onClick={logout}>Sign out</button>
       </header>
       {error && <div className="notice error" role="alert">{error}</div>}
