@@ -50,11 +50,11 @@ OAuth cancellation, provider failure, expired sessions, account linking, email v
 
 ## Image storage
 
-User images are stored as files in a private Supabase Storage bucket, with only the object path and descriptive metadata referenced by the recipe record. Bucket name, MIME allowlist, maximum size/dimensions, quota, signed-URL lifetime, EXIF handling, and orphan cleanup are UNKNOWN — needs human confirmation. Service-role access is prohibited in the browser.
+User images are stored as files in the private `recipe-images` Supabase Storage bucket, with only the owner-scoped object path referenced by the recipe record. JPEG, PNG, and WebP files are limited to 5 MB and displayed through one-hour signed URLs. Service-role access is prohibited in the browser; abandoned-object lifecycle cleanup remains deferred.
 
 ## Known unknowns
 
 - Exact Hostinger plan name: UNKNOWN — needs human confirmation.
 - Supabase project URL and production project identity: UNKNOWN — created during setup.
-- Final image size and MIME allowlist: UNKNOWN — set before upload implementation.
+- Final image size and MIME allowlist: finalized as 5 MB and JPEG/PNG/WebP.
 

@@ -38,14 +38,14 @@ No service-role, database-password, or OAuth client secret may be a Vite client 
 ## Storage contract
 
 - Provider: Supabase Storage
-- Bucket: UNKNOWN — needs human confirmation
+- Bucket: `recipe-images`
 - Visibility: private by default
 - Planned path convention: `{user_id}/recipes/{recipe_id}/{image_id}`
-- Allowed MIME types: UNKNOWN — needs human confirmation
-- Maximum file size and dimensions: UNKNOWN — needs human confirmation
+- Allowed MIME types: `image/jpeg`, `image/png`, `image/webp`
+- Maximum file size: 5 MB; maximum dimensions: 2048 × 2048 (client display guidance; server bucket limit enforces file size and MIME)
 - Private images use signed URLs when displayed.
 - Service-role key is never exposed to the browser or static build.
-- Replacement, deletion, and orphan cleanup behavior: UNKNOWN — needs human confirmation.
+- Replacement and deletion remove the previous owner-scoped object; failed uploads clean up the newly created object. Abandoned-object lifecycle cleanup remains deferred.
 
 ## Integrations
 

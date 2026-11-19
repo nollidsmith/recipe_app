@@ -30,5 +30,5 @@
 
 ## Section 3 — Recipes
 
-- 3.1 Build recipe list and create flow — in progress (T-005)
+- 3.1 Build recipe list and create flow — completed (T-005)
 
