@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createPantryItem, deletePantryItem, listPantryItems, updatePantryQuantity } from "../lib/pantry";
+import { createPantryItem, deletePantryItem, listPantryItems, updatePantryQuantity, validatePantryImage } from "../lib/pantry";
 import type { PantryItem, PantryItemDraft } from "../types/pantry";
 import MobileNav from "../components/MobileNav";
 import Toast from "../components/Toast";
@@ -26,6 +26,11 @@ export default function PantryPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
+
+  useEffect(() => () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+  }, [imagePreview]);
 
   const notify = (message: string) => {
     setToast(message);
@@ -53,6 +58,8 @@ export default function PantryPage() {
       const item = await createPantryItem(draft);
       setItems((current) => [...current, item].sort((left, right) => left.name.localeCompare(right.name)));
       setDraft(emptyDraft);
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      setImagePreview("");
       notify(`${item.name} added to stock.`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to add this stock item.");
@@ -102,7 +109,29 @@ export default function PantryPage() {
             <label>Low-stock alert<input aria-label="Low-stock alert" type="number" min="0" step="any" value={draft.lowStockThreshold} onChange={(event) => setDraft({ ...draft, lowStockThreshold: event.target.value })} placeholder="Optional" /></label>
             <label>Expiration date<input aria-label="Expiration date" type="date" value={draft.expiresOn} onChange={(event) => setDraft({ ...draft, expiresOn: event.target.value })} /></label>
           </div>
-          <label className="image-upload">Item photo<input aria-label="Item photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setDraft({ ...draft, image: event.target.files?.[0] ?? null })} /><span>{draft.image ? draft.image.name : "Choose a JPEG, PNG, or WebP up to 5 MB"}</span></label>
+          <label className="image-upload">Item photo<input aria-label="Item photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => {
+            const file = event.target.files?.[0] ?? null;
+            setError("");
+            if (!file) {
+              if (imagePreview) URL.revokeObjectURL(imagePreview);
+              setDraft({ ...draft, image: null });
+              setImagePreview("");
+              return;
+            }
+            try {
+              validatePantryImage(file);
+              if (imagePreview) URL.revokeObjectURL(imagePreview);
+              setDraft({ ...draft, image: file });
+              setImagePreview(URL.createObjectURL(file));
+            } catch (caught) {
+              event.target.value = "";
+              if (imagePreview) URL.revokeObjectURL(imagePreview);
+              setDraft({ ...draft, image: null });
+              setImagePreview("");
+              setError(caught instanceof Error ? caught.message : "Unable to use that image.");
+            }
+          }} /><span>{draft.image ? draft.image.name : "Choose a JPEG, PNG, or WebP up to 5 MB"}</span></label>
+          {imagePreview && <div className="image-preview"><img src={imagePreview} alt="Pantry item preview" /><button className="text-button" type="button" onClick={() => { URL.revokeObjectURL(imagePreview); setDraft({ ...draft, image: null }); setImagePreview(""); }}>Remove image</button></div>}
           <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Adding…" : "Add to stock"}</button>
         </form>
         <section className="pantry-list" aria-labelledby="stock-list-title">

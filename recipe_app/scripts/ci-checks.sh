@@ -59,7 +59,21 @@ cd "$top" || die "Changing to the top of the work tree failed."
 # error used to read as an empty diff and pass every gate. Filters use sed or awk,
 # which exit 0 on no match, so no `|| true` is needed to hide grep's exit 1.
 # A path git still quotes ("docs/a\tb.md") counts too, so quoting can't dodge the gate.
-authored_docs() { sed -n '/^"\{0,1\}docs\/repos\//d;/^"\{0,1\}docs\//p'; }
+# In this workspace the app lives below the Git root, so CI_PROJECT_PREFIX keeps the
+# docs consensus gate aligned with recipe_app/docs instead of silently scanning nothing.
+project_prefix="${CI_PROJECT_PREFIX:-}"
+project_prefix="${project_prefix%/}"
+authored_docs() {
+  prefix="$project_prefix"
+  [ -z "$prefix" ] || prefix="$prefix/"
+  awk -v p="$prefix" '
+    {
+      line = $0
+      if (substr(line, 1, 1) == "\"") line = substr(line, 2)
+      if (index(line, p "docs/repos/") == 1) next
+      if (index(line, p "docs/") == 1) print
+    }'
+}
 
 # BEGIN safe-echo (starter T-024). Byte-identical in scripts/ci-checks.sh and
 # .githooks/pre-commit; scripts/test/test-ci-wiring.sh compares the two copies.

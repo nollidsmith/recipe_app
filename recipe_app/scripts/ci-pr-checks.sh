@@ -62,12 +62,12 @@ git cat-file blob "$target:${project_path}scripts/ci-checks.sh" > "$tmp/ci-check
 
 # Absent allowlist on the target means nothing is allowlisted: an empty file, never
 # a fallback to the PR's own .placeholder-allow.
-entry=$(git ls-tree --full-tree "$target" -- .placeholder-allow) \
+entry=$(git ls-tree --full-tree "$target" -- "${project_path}.placeholder-allow") \
   || die "git ls-tree $target failed."
 case "$entry" in
   '') : > "$tmp/placeholder-allow" ;;
   '100644 blob '*|'100755 blob '*)
-    git cat-file blob "$target:.placeholder-allow" > "$tmp/placeholder-allow" \
+    git cat-file blob "$target:${project_path}.placeholder-allow" > "$tmp/placeholder-allow" \
       || die "Reading the target's .placeholder-allow failed." ;;
   *) die "Target's .placeholder-allow is not a regular file." ;;
 esac

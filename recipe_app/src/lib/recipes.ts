@@ -49,6 +49,13 @@ function imageExtension(file: File) {
 export async function uploadRecipeImage(recipeId: string, file: File) {
   validateRecipeImage(file);
 
+  const { data: existingRecipe, error: existingError } = await supabase
+    .from("recipes")
+    .select("image_path")
+    .eq("id", recipeId)
+    .maybeSingle();
+  if (existingError) throw existingError;
+
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError) throw userError;
   if (!userData.user) throw new Error("Your session has expired. Sign in again before uploading an image.");
@@ -67,6 +74,10 @@ export async function uploadRecipeImage(recipeId: string, file: File) {
   if (updateError) {
     await supabase.storage.from(RECIPE_IMAGE_BUCKET).remove([path]);
     throw updateError;
+  }
+
+  if (existingRecipe?.image_path && existingRecipe.image_path !== path) {
+    await supabase.storage.from(RECIPE_IMAGE_BUCKET).remove([existingRecipe.image_path]);
   }
 
   return path;
@@ -128,6 +139,17 @@ export async function createRecipe(draft: RecipeDraft) {
 }
 
 export async function deleteRecipe(id: string) {
+  const { data: recipe, error: findError } = await supabase
+    .from("recipes")
+    .select("image_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (findError) throw findError;
+
   const { error } = await supabase.from("recipes").delete().eq("id", id);
   if (error) throw error;
+
+  if (recipe?.image_path) {
+    await supabase.storage.from(RECIPE_IMAGE_BUCKET).remove([recipe.image_path]);
+  }
 }

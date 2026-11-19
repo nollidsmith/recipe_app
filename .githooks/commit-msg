@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+set -e
+CI_PROJECT_PREFIX=recipe_app exec sh recipe_app/.githooks/commit-msg "$@"
