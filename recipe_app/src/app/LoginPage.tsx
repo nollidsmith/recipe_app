@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<FormMode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -40,7 +41,10 @@ export default function LoginPage() {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { first_name: firstName.trim() },
+          },
         });
         if (signUpError) throw signUpError;
         setMessage(
@@ -115,6 +119,7 @@ export default function LoginPage() {
 
           {mode !== "reset" && (
             <>
+              {mode === "sign-up" && <><label htmlFor="first-name">First name</label><input id="first-name" type="text" autoComplete="given-name" value={firstName} onChange={(event) => setFirstName(event.target.value)} required /></>}
               <label htmlFor="password">Password</label>
               <input id="password" type="password" autoComplete={mode === "sign-up" ? "new-password" : "current-password"} value={password} onChange={(event) => setPassword(event.target.value)} minLength={8} required />
             </>

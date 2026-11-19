@@ -11,7 +11,7 @@ Every application record belongs to the authenticated Supabase user through `use
 ### `profiles`
 
 - `id` — UUID, references the auth user
-- `display_name` — optional text
+- `display_name` — the user’s first name, captured during account creation
 - `created_at`, `updated_at` — timestamps
 
 PII: `display_name` is user-provided profile data. Authentication email remains owned by `auth.users` and is not duplicated as a password or credential.

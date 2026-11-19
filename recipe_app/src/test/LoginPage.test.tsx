@@ -52,11 +52,15 @@ describe("LoginPage", () => {
     renderLogin();
 
     await user.click(screen.getByRole("button", { name: "Need an account? Sign up" }));
+    await user.type(screen.getByLabelText("First name"), "Dillon");
     await user.type(screen.getByLabelText("Email address"), "new@example.com");
     await user.type(screen.getByLabelText("Password"), "password123");
     fireEvent.submit(screen.getByLabelText("Password").closest("form")!);
 
     expect(await screen.findByRole("status")).toHaveTextContent("Check your email");
+    expect(mockAuth.signUp).toHaveBeenCalledWith(expect.objectContaining({
+      options: expect.objectContaining({ data: { first_name: "Dillon" } }),
+    }));
   });
 
   it("uses the reset-password callback URL", async () => {
