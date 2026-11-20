@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import type { Recipe, RecipeDraft, RecipeIngredient } from "../types/recipe";
+import { removeStorageFile, toUserFacingError } from "./errors";
 
 export const RECIPE_IMAGE_BUCKET = "recipe-images";
 const MAX_RECIPE_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -21,7 +22,7 @@ export async function listRecipes() {
     .select("*, recipe_ingredients(*)")
     .order("updated_at", { ascending: false });
 
-  if (error) throw error;
+  if (error) throw toUserFacingError(error, "Unable to load your recipes.");
   const recipes = ((data ?? []) as RecipeRow[]).map((recipe) => ({
     ...recipe,
     recipe_ingredients: recipe.recipe_ingredients ?? [],
@@ -54,17 +55,17 @@ export async function uploadRecipeImage(recipeId: string, file: File) {
     .select("image_path")
     .eq("id", recipeId)
     .maybeSingle();
-  if (existingError) throw existingError;
+  if (existingError) throw toUserFacingError(existingError, "Unable to prepare the recipe image.");
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
+  if (userError) throw toUserFacingError(userError, "Unable to verify your session.");
   if (!userData.user) throw new Error("Your session has expired. Sign in again before uploading an image.");
 
   const path = `${userData.user.id}/recipes/${recipeId}/${crypto.randomUUID()}.${imageExtension(file)}`;
   const { error: uploadError } = await supabase.storage
     .from(RECIPE_IMAGE_BUCKET)
     .upload(path, file, { contentType: file.type, upsert: false });
-  if (uploadError) throw uploadError;
+  if (uploadError) throw toUserFacingError(uploadError, "Unable to upload the recipe image.");
 
   const { error: updateError } = await supabase
     .from("recipes")
@@ -72,12 +73,12 @@ export async function uploadRecipeImage(recipeId: string, file: File) {
     .eq("id", recipeId);
 
   if (updateError) {
-    await supabase.storage.from(RECIPE_IMAGE_BUCKET).remove([path]);
-    throw updateError;
+    await removeStorageFile(supabase.storage.from(RECIPE_IMAGE_BUCKET), path, "recipe image rollback");
+    throw toUserFacingError(updateError, "Unable to save the recipe image.");
   }
 
   if (existingRecipe?.image_path && existingRecipe.image_path !== path) {
-    await supabase.storage.from(RECIPE_IMAGE_BUCKET).remove([existingRecipe.image_path]);
+    await removeStorageFile(supabase.storage.from(RECIPE_IMAGE_BUCKET), existingRecipe.image_path, "replaced recipe image");
   }
 
   return path;
@@ -87,13 +88,13 @@ export async function getRecipeImageUrl(path: string) {
   const { data, error } = await supabase.storage
     .from(RECIPE_IMAGE_BUCKET)
     .createSignedUrl(path, 60 * 60);
-  if (error) throw error;
+  if (error) throw toUserFacingError(error, "Unable to create a recipe image URL.");
   return data.signedUrl;
 }
 
 export async function createRecipe(draft: RecipeDraft) {
   const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
+  if (userError) throw toUserFacingError(userError, "Unable to verify your session.");
   if (!userData.user) throw new Error("Your session has expired. Sign in again before saving a recipe.");
 
   const { data: recipe, error: recipeError } = await supabase
@@ -111,7 +112,7 @@ export async function createRecipe(draft: RecipeDraft) {
     .select("id")
     .single();
 
-  if (recipeError) throw recipeError;
+  if (recipeError) throw toUserFacingError(recipeError, "Unable to save your recipe.");
 
   const ingredients = draft.ingredients
     .map((ingredient, index) => ({
@@ -130,8 +131,9 @@ export async function createRecipe(draft: RecipeDraft) {
       .insert(ingredients);
 
     if (ingredientError) {
-      await supabase.from("recipes").delete().eq("id", recipe.id);
-      throw ingredientError;
+      const { error: rollbackError } = await supabase.from("recipes").delete().eq("id", recipe.id);
+      if (rollbackError) console.error("Recipe rollback failed", rollbackError);
+      throw toUserFacingError(ingredientError, "Unable to save the recipe ingredients.");
     }
   }
 
@@ -144,13 +146,12 @@ export async function deleteRecipe(id: string) {
     .select("image_path")
     .eq("id", id)
     .maybeSingle();
-  if (findError) throw findError;
+  if (findError) throw toUserFacingError(findError, "Unable to find that recipe.");
 
   if (recipe?.image_path) {
-    const { error: removeError } = await supabase.storage.from(RECIPE_IMAGE_BUCKET).remove([recipe.image_path]);
-    if (removeError) throw removeError;
+    await removeStorageFile(supabase.storage.from(RECIPE_IMAGE_BUCKET), recipe.image_path, "recipe deletion", true);
   }
 
   const { error } = await supabase.from("recipes").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw toUserFacingError(error, "Unable to delete that recipe.");
 }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { createPantryItem, deletePantryItem, listPantryItems, updatePantryQuantity, validatePantryImage } from "../lib/pantry";
 import type { PantryItem, PantryItemDraft } from "../types/pantry";
-import MobileNav from "../components/MobileNav";
+import AppNav from "../components/AppNav";
 import Toast from "../components/Toast";
 
 const emptyDraft: PantryItemDraft = {
@@ -146,7 +146,7 @@ export default function PantryPage() {
           {!loading && !loadFailed && items.length > 0 && <div className="stock-list">{items.map((item) => <article className={`stock-card${isLowStock(item) ? " low-stock" : ""}`} key={item.id}>{item.image_url ? <img className="stock-card-image" src={item.image_url} alt="" /> : <div className="stock-card-placeholder" aria-hidden="true">◒</div>}<div><h3>{item.name}</h3><p className="muted">{item.category || "Uncategorized"}{item.expires_on ? ` · Expires ${item.expires_on}` : ""}</p></div><div className="stock-quantity"><strong>{item.quantity} {item.unit}</strong><div className="quantity-actions"><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, -1)} aria-label={`Decrease ${item.name}`}>−</button><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, 1)} aria-label={`Increase ${item.name}`}>+</button></div></div>{isLowStock(item) && <span className="stock-warning">Low stock</span>}<button className="text-button" type="button" onClick={() => void removeItem(item)}>Delete</button></article>)}</div>}
         </section>
       </section>
-      <MobileNav />
+      <AppNav />
     </main>
   );
 }
