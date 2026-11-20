@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { toUserFacingError } from "../lib/errors";
 
 type AuthContextValue = {
   session: Session | null;
@@ -16,31 +17,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [firstName, setFirstName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (nextSession: Session | null) => {
-    const metadataName = nextSession?.user.user_metadata?.first_name;
-    if (!nextSession) {
-      setFirstName(null);
-      return;
-    }
-    const { data } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("id", nextSession.user.id)
-      .maybeSingle();
-    setFirstName(data?.display_name || metadataName || null);
-  };
-
   useEffect(() => {
     let active = true;
+    let profileRequest = 0;
+
+    const loadProfile = async (nextSession: Session | null) => {
+      const requestId = ++profileRequest;
+      const metadataName = nextSession?.user.user_metadata?.first_name;
+      if (!nextSession) {
+        if (active && requestId === profileRequest) setFirstName(null);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", nextSession.user.id)
+          .maybeSingle();
+        if (error) console.warn("Profile lookup failed", error);
+        if (active && requestId === profileRequest) setFirstName(data?.display_name || metadataName || null);
+      } catch (error) {
+        console.warn("Profile lookup failed", error);
+        if (active && requestId === profileRequest) setFirstName(metadataName || null);
+      }
+    };
 
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       setSession(data.session);
       void loadProfile(data.session);
       setLoading(false);
+    }).catch((error) => {
+      if (!active) return;
+      console.warn("Session lookup failed", error);
+      setSession(null);
+      setFirstName(null);
+      setLoading(false);
     });
 
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return;
       setSession(nextSession);
       void loadProfile(nextSession);
       setLoading(false);
@@ -59,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       signOut: async () => {
         const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+        if (error) throw toUserFacingError(error, "Unable to sign out. Try again.");
       },
     }),
     [firstName, loading, session],

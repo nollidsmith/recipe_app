@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import type { PantryItem, PantryItemDraft } from "../types/pantry";
+import { removeStorageFile, toUserFacingError } from "./errors";
 
 export const PANTRY_IMAGE_BUCKET = "pantry-images";
 const MAX_PANTRY_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -22,7 +23,7 @@ export async function listPantryItems() {
     .select("*")
     .order("name", { ascending: true });
 
-  if (error) throw error;
+  if (error) throw toUserFacingError(error, "Unable to load your stock.");
   const items = (data ?? []) as PantryItem[];
   return Promise.all(items.map(async (item) => ({
     ...item,
@@ -41,13 +42,13 @@ function imageExtension(file: File) {
 
 async function getPantryImageUrl(path: string) {
   const { data, error } = await supabase.storage.from(PANTRY_IMAGE_BUCKET).createSignedUrl(path, 60 * 60);
-  if (error) throw error;
+  if (error) throw toUserFacingError(error, "Unable to create a stock image URL.");
   return data.signedUrl;
 }
 
 export async function createPantryItem(draft: PantryItemDraft) {
   const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError) throw userError;
+  if (userError) throw toUserFacingError(userError, "Unable to verify your session.");
   if (!userData.user) throw new Error("Your session has expired. Sign in again before adding stock.");
 
   const name = draft.name.trim();
@@ -70,21 +71,23 @@ export async function createPantryItem(draft: PantryItemDraft) {
     .select("*")
     .single();
 
-  if (error) throw error;
+  if (error) throw toUserFacingError(error, "Unable to add that stock item.");
   const item = data as PantryItem;
 
   if (!draft.image) return item;
   const path = `${userData.user.id}/pantry/${item.id}/${crypto.randomUUID()}.${imageExtension(draft.image)}`;
   const { error: uploadError } = await supabase.storage.from(PANTRY_IMAGE_BUCKET).upload(path, draft.image, { contentType: draft.image.type, upsert: false });
   if (uploadError) {
-    await supabase.from("pantry_items").delete().eq("id", item.id);
-    throw uploadError;
+    const { error: rollbackError } = await supabase.from("pantry_items").delete().eq("id", item.id);
+    if (rollbackError) console.error("Pantry item rollback failed after upload error", rollbackError);
+    throw toUserFacingError(uploadError, "Unable to upload the stock image.");
   }
   const { data: updated, error: updateError } = await supabase.from("pantry_items").update({ image_path: path }).eq("id", item.id).select("*").single();
   if (updateError) {
-    await supabase.storage.from(PANTRY_IMAGE_BUCKET).remove([path]);
-    await supabase.from("pantry_items").delete().eq("id", item.id);
-    throw updateError;
+    await removeStorageFile(supabase.storage.from(PANTRY_IMAGE_BUCKET), path, "stock image rollback");
+    const { error: rollbackError } = await supabase.from("pantry_items").delete().eq("id", item.id);
+    if (rollbackError) console.error("Pantry item rollback failed after update error", rollbackError);
+    throw toUserFacingError(updateError, "Unable to save the stock image.");
   }
   return { ...(updated as PantryItem), image_url: await getPantryImageUrl(path) };
 }
@@ -97,19 +100,18 @@ export async function updatePantryQuantity(id: string, quantity: number) {
     .select("*")
     .single();
 
-  if (error) throw error;
+  if (error) throw toUserFacingError(error, "Unable to update that stock item.");
   return data as PantryItem;
 }
 
 export async function deletePantryItem(id: string) {
   const { data: item, error: findError } = await supabase.from("pantry_items").select("image_path").eq("id", id).maybeSingle();
-  if (findError) throw findError;
+  if (findError) throw toUserFacingError(findError, "Unable to find that stock item.");
 
   if (item?.image_path) {
-    const { error: removeError } = await supabase.storage.from(PANTRY_IMAGE_BUCKET).remove([item.image_path]);
-    if (removeError) throw removeError;
+    await removeStorageFile(supabase.storage.from(PANTRY_IMAGE_BUCKET), item.image_path, "stock deletion", true);
   }
 
   const { error } = await supabase.from("pantry_items").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw toUserFacingError(error, "Unable to delete that stock item.");
 }
