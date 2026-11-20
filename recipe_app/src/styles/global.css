@@ -191,6 +191,16 @@ h1, h2 {
 @media (max-width: 680px) { .hub-shell, .pantry-shell { padding: 24px 16px 100px; } .hub-header { margin-bottom: 30px; } .recipe-section { margin-bottom: 22px; } .section-heading-inline { align-items: flex-start; flex-direction: column; } .recipe-actions { width: 100%; } .recipe-actions .button { flex: 1; text-align: center; } .recipe-card { padding: 18px; border-radius: 16px; } .recipe-card-image { width: calc(100% + 36px); margin: -18px -18px 16px; border-radius: 16px 16px 0 0; } .stock-card { grid-template-columns: 48px 1fr; gap: 12px; padding: 13px; } .stock-card-image, .stock-card-placeholder { width: 48px; height: 48px; } .stock-quantity { grid-column: 2; justify-items: start; } .stock-card .stock-warning, .stock-card > .text-button { grid-column: 2; } .mobile-nav { position: fixed; z-index: 15; right: 12px; bottom: 12px; left: 12px; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px; border: 1px solid rgba(255,255,255,.14); border-radius: 18px; background: rgba(15,20,29,.94); box-shadow: 0 18px 45px rgba(0,0,0,.45); backdrop-filter: blur(18px); } .mobile-nav-link { display: grid; justify-items: center; gap: 4px; padding: 8px 2px; border-radius: 12px; color: #8290a6; font-size: .63rem; font-weight: 750; text-decoration: none; } .mobile-nav-link span:first-child { font-size: 1.1rem; } .mobile-nav-link.active { color: #fff; background: rgba(78,145,250,.18); } .toast { right: 16px; bottom: 92px; left: 16px; max-width: none; text-align: center; } }
 .loading-shell { display: grid; min-height: 100vh; place-items: center; align-content: center; gap: 16px; color: #aeb9c8; background: #080a0f; }
 .loading-mark { display: grid; width: 58px; height: 58px; place-items: center; border-radius: 18px; color: white; background: #e03d48; font-weight: 900; animation: pulse 1.2s ease-in-out infinite; }
+.callback-card { display: grid; justify-items: center; gap: 18px; width: min(100% - 32px, 520px); padding: 34px; border: 1px solid rgba(255,255,255,.12); border-radius: 22px; background: #111620; text-align: center; }
+.callback-card h1 { font-size: clamp(1.8rem, 5vw, 3rem); }
+.callback-card .muted, .callback-card .notice { margin: 0; }
+.dialog-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.72); }
+.confirm-dialog { width: min(100%, 460px); padding: 28px; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; color: #f7f8fa; background: #151c29; box-shadow: 0 25px 70px rgba(0,0,0,.55); }
+.confirm-dialog h2 { font-size: 1.8rem; }
+.confirm-dialog p { color: #aeb9c8; line-height: 1.55; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.button-danger { background: #b21e45; }
+.confirm-dialog button:focus-visible { outline: 3px solid #68a8ff; outline-offset: 3px; }
 @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-18px) rotate(8deg); } }
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulse { 50% { transform: scale(1.08); box-shadow: 0 0 0 14px rgba(224,61,72,.1); } }

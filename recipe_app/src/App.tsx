@@ -1,22 +1,27 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { AuthProvider, useAuth } from "./app/AuthProvider";
-import HubPage from "./app/HubPage";
 import LoginPage from "./app/LoginPage";
 import ProtectedRoute from "./app/ProtectedRoute";
-import ResetPasswordPage from "./app/ResetPasswordPage";
-import RecipeFormPage from "./app/RecipeFormPage";
-import PantryPage from "./app/PantryPage";
-import ComingSoonPage from "./app/ComingSoonPage";
+import OAuthCallbackPage from "./app/OAuthCallbackPage";
+import { isOAuthCallbackUrl } from "./app/oauth";
+
+const HubPage = lazy(() => import("./app/HubPage"));
+const ResetPasswordPage = lazy(() => import("./app/ResetPasswordPage"));
+const RecipeFormPage = lazy(() => import("./app/RecipeFormPage"));
+const PantryPage = lazy(() => import("./app/PantryPage"));
+const ComingSoonPage = lazy(() => import("./app/ComingSoonPage"));
 
 function LoadingScreen() {
-  return <main className="loading-shell"><div className="loading-mark">PP</div><p>Opening your kitchen…</p></main>;
+  return <main className="loading-shell"><div className="loading-mark" aria-hidden="true">PP</div><p role="status" aria-live="polite">Opening your kitchen…</p></main>;
 }
 
 function AppRoutes() {
   const { loading } = useAuth();
   if (loading) return <LoadingScreen />;
+  if (isOAuthCallbackUrl()) return <OAuthCallbackPage />;
   return (
-    <Routes>
+    <Suspense fallback={<LoadingScreen />}><Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route element={<ProtectedRoute />}>
@@ -28,7 +33,7 @@ function AppRoutes() {
         <Route path="/profile" element={<ComingSoonPage title="Your profile" description="Account settings and preferences are coming next." />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    </Routes></Suspense>
   );
 }
 

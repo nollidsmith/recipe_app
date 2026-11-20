@@ -4,6 +4,7 @@ import { createPantryItem, deletePantryItem, listPantryItems, updatePantryQuanti
 import type { PantryItem, PantryItemDraft } from "../types/pantry";
 import AppNav from "../components/AppNav";
 import Toast from "../components/Toast";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 const emptyDraft: PantryItemDraft = {
   name: "",
@@ -28,6 +29,7 @@ export default function PantryPage() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const [imagePreview, setImagePreview] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<PantryItem | null>(null);
 
   useEffect(() => () => {
     if (imagePreview) URL.revokeObjectURL(imagePreview);
@@ -84,7 +86,6 @@ export default function PantryPage() {
   };
 
   const removeItem = async (item: PantryItem) => {
-    if (!window.confirm(`Delete ${item.name} from your stock?`)) return;
     try {
       await deletePantryItem(item.id);
       setItems((current) => current.filter((currentItem) => currentItem.id !== item.id));
@@ -97,6 +98,7 @@ export default function PantryPage() {
   return (
     <main className="pantry-shell">
       <Toast message={toast} />
+      {pendingDelete && <ConfirmDialog title={`Delete ${pendingDelete.name}?`} description="This will remove the item from your stock." confirmLabel="Delete item" onCancel={() => setPendingDelete(null)} onConfirm={() => { const item = pendingDelete; setPendingDelete(null); void removeItem(item); }} />}
       <header className="recipe-editor-header">
         <div><p className="eyebrow">PantryPilot / Stock</p><h1>What’s in stock?</h1><p className="muted">Keep a simple view of what you have before you plan your next meal.</p></div>
         <Link className="button button-secondary" to="/">Back to kitchen</Link>
@@ -106,14 +108,14 @@ export default function PantryPage() {
         <form className="form-section pantry-form" onSubmit={addItem}>
           <div className="section-heading"><p className="eyebrow">Add stock</p><h2>Track an item</h2><p className="form-help muted">Add the basics first. You can use a photo to recognize the item later.</p></div>
           <div className="form-grid form-grid-wide pantry-form-grid">
-            <label>Item name<input aria-label="Item name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Rice" required /></label>
-            <label>Unit<input aria-label="Unit" value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })} placeholder="bags, cans, oz" required /></label>
-            <label>Quantity<input aria-label="Quantity" type="number" min="0" step="any" value={draft.quantity} onChange={(event) => setDraft({ ...draft, quantity: event.target.value })} placeholder="0" /></label>
-            <label>Category<input aria-label="Category" value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })} placeholder="Pantry" /></label>
-            <label>Low-stock alert<input aria-label="Low-stock alert" type="number" min="0" step="any" value={draft.lowStockThreshold} onChange={(event) => setDraft({ ...draft, lowStockThreshold: event.target.value })} placeholder="Optional" /></label>
-            <label>Expiration date<input aria-label="Expiration date" type="date" value={draft.expiresOn} onChange={(event) => setDraft({ ...draft, expiresOn: event.target.value })} /></label>
+            <label htmlFor="pantry-name">Item name<input id="pantry-name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Rice" required /></label>
+            <label htmlFor="pantry-unit">Unit<input id="pantry-unit" value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })} placeholder="bags, cans, oz" required /></label>
+            <label htmlFor="pantry-quantity">Quantity<input id="pantry-quantity" type="number" min="0" step="any" value={draft.quantity} onChange={(event) => setDraft({ ...draft, quantity: event.target.value })} placeholder="0" /></label>
+            <label htmlFor="pantry-category">Category<input id="pantry-category" value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })} placeholder="Pantry" /></label>
+            <label htmlFor="pantry-threshold">Low-stock alert<input id="pantry-threshold" type="number" min="0" step="any" value={draft.lowStockThreshold} onChange={(event) => setDraft({ ...draft, lowStockThreshold: event.target.value })} placeholder="Optional" /></label>
+            <label htmlFor="pantry-expires">Expiration date<input id="pantry-expires" type="date" value={draft.expiresOn} onChange={(event) => setDraft({ ...draft, expiresOn: event.target.value })} /></label>
           </div>
-          <label className="image-upload">Item photo<input aria-label="Item photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => {
+          <label className="image-upload" htmlFor="pantry-image">Item photo<input id="pantry-image" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => {
             const file = event.target.files?.[0] ?? null;
             setError("");
             if (!file) {
@@ -140,10 +142,10 @@ export default function PantryPage() {
         </form>
         <section className="pantry-list" aria-labelledby="stock-list-title">
           <div className="section-heading"><p className="eyebrow">Your inventory</p><h2 id="stock-list-title">Stock list</h2></div>
-          {loading && <div className="recipe-state">Loading your stock…</div>}
+          {loading && <div className="recipe-state" role="status" aria-live="polite">Loading your stock…</div>}
           {!loading && loadFailed && <div className="empty-state"><span className="empty-icon">!</span><h3>We couldn’t load your stock.</h3><p className="muted">Check your connection and try again.</p><button className="button button-primary" type="button" onClick={() => void loadItems()}>Try again</button></div>}
           {!loading && !loadFailed && items.length === 0 && <div className="empty-state"><span className="empty-icon">◒</span><h3>Your stock list is empty.</h3><p className="muted">Add the ingredients and supplies you already have.</p></div>}
-          {!loading && !loadFailed && items.length > 0 && <div className="stock-list">{items.map((item) => <article className={`stock-card${isLowStock(item) ? " low-stock" : ""}`} key={item.id}>{item.image_url ? <img className="stock-card-image" src={item.image_url} alt="" /> : <div className="stock-card-placeholder" aria-hidden="true">◒</div>}<div><h3>{item.name}</h3><p className="muted">{item.category || "Uncategorized"}{item.expires_on ? ` · Expires ${item.expires_on}` : ""}</p></div><div className="stock-quantity"><strong>{item.quantity} {item.unit}</strong><div className="quantity-actions"><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, -1)} aria-label={`Decrease ${item.name}`}>−</button><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, 1)} aria-label={`Increase ${item.name}`}>+</button></div></div>{isLowStock(item) && <span className="stock-warning">Low stock</span>}<button className="text-button" type="button" onClick={() => void removeItem(item)}>Delete</button></article>)}</div>}
+          {!loading && !loadFailed && items.length > 0 && <div className="stock-list">{items.map((item) => <article className={`stock-card${isLowStock(item) ? " low-stock" : ""}`} key={item.id}>{item.image_url ? <img className="stock-card-image" alt="" src={item.image_url} /> : <div className="stock-card-placeholder" aria-hidden="true">◒</div>}<div><h3>{item.name}</h3><p className="muted">{item.category || "Uncategorized"}{item.expires_on ? ` · Expires ${item.expires_on}` : ""}</p></div><div className="stock-quantity"><strong>{item.quantity} {item.unit}</strong><div className="quantity-actions"><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, -1)} aria-label={`Decrease ${item.name}`}>−</button><button className="icon-button" type="button" onClick={() => void adjustQuantity(item, 1)} aria-label={`Increase ${item.name}`}>+</button></div></div>{isLowStock(item) && <span className="stock-warning">Low stock</span>}<button className="text-button" type="button" onClick={() => setPendingDelete(item)}>Delete</button></article>)}</div>}
         </section>
       </section>
       <AppNav />
