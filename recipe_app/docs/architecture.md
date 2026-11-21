@@ -36,17 +36,17 @@ The browser is the deployed application. There is no custom Node.js server in th
 - `src/types/` — shared TypeScript models and Supabase-generated types
 - `public/images/` — non-user static assets only; user uploads live in Supabase Storage
 
-The app uses client-side routing. A Hostinger SPA fallback is required but its rewrite configuration is not yet verified. Data access is colocated in feature modules rather than scattered through presentational components.
+The app uses client-side routing. A Hostinger SPA fallback is provided by the deployed `public_html/.htaccess`. Data access is colocated in feature modules rather than scattered through presentational components.
 
 ## Authentication and OAuth
 
 Supabase Auth is the identity source. OAuth uses the installed client defaults; PKCE is not explicitly configured. Redirect origins for local, preview, and production are:
 
 - `http://localhost:5173` — local development
-- Preview URL — UNKNOWN — needs human confirmation
+- Preview URL — none configured for the current release.
 - Production Hostinger domain — `https://recipe.dillonlsmith.com`
 
-OAuth cancellation, provider failure, expired sessions, account linking, email verification, and password-reset behavior must have documented UI states before Section 1 implementation.
+OAuth cancellation, provider failure, expired sessions, email verification, and password-reset behavior have documented UI states. Account linking is disabled for the current release.
 
 ## Image storage
 
@@ -55,7 +55,7 @@ User images are stored as files in private `recipe-images` and `pantry-images` S
 ## Known unknowns
 
 - Exact Hostinger plan name: UNKNOWN — needs human confirmation.
-- Supabase project URL and production project identity: UNKNOWN — created during setup.
+- Supabase production project: `PantryPilot` (`canbplxrqkhtvycxtfag`, `https://canbplxrqkhtvycxtfag.supabase.co`).
 - Final image size and MIME allowlist: 5 MB and JPEG/PNG/WebP. Dimensions are not validated.
 - Live migration application and cross-user Storage isolation: UNKNOWN — needs human confirmation.
 

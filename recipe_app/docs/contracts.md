@@ -33,8 +33,8 @@ No service-role, database-password, or OAuth client secret may be a Vite client 
 - Apple OAuth
 - Password-reset request and callback
 - Session refresh and logout
-- OAuth redirect allowlist: `http://localhost:5173`, preview URL UNKNOWN, and `https://recipe.dillonlsmith.com`
-- Account linking behavior: UNKNOWN — needs human confirmation
+- OAuth redirect allowlist: `http://localhost:5173` and `https://recipe.dillonlsmith.com`; no preview deployment is configured.
+- Account linking behavior: disabled in the current Supabase production configuration; no user-facing linking flow is exposed.
 - Signup profile data: the UI sends first name as Supabase `user_metadata.first_name`; the `handle_new_user_profile` trigger persists it to `profiles.display_name`.
 
 ## Storage contract
@@ -67,9 +67,10 @@ The application depends on `profiles`, `recipes`, `recipe_ingredients`, `pantry_
 
 - Vite source variables use the `VITE_` prefix.
 - Production build command is `npm run build` from `recipe_app/` or `npm --prefix recipe_app run build` from the workspace root; output is `recipe_app/dist/`.
-- Hostinger must serve `index.html` for client-side routes; rewrite method is UNKNOWN — needs human confirmation.
+- Hostinger must serve `index.html` for client-side routes; the deployed `public_html/.htaccess` provides the SPA rewrite fallback.
 - Root `.github/workflows/recipe-app-checks.yml` runs procedure checks and the `typecheck, test, and build` job; it does not archive or deploy `dist/`.
-- Hostinger upload mechanism and deployment secret inventory are UNKNOWN — needs human confirmation.
+- Hostinger deployment uses File Manager to upload a packaged static build and extract it into `public_html` with overwrite enabled. The prior deployment archive should be retained until the new release is verified.
+- Hostinger deployment secrets are not stored in the repository; production build inputs are supplied outside committed source.
 
 ## Contract change rule
 
