@@ -21,7 +21,7 @@ User-uploaded images use private Supabase Storage rather than Hostinger file sto
 ## Open follow-ups
 
 - Confirm the exact Hostinger plan.
-- Configure Google and Apple OAuth in Supabase.
+- Configure Google OAuth in Supabase.
 - Define upload size/type limits and storage policies.
 - Create development and production Supabase projects.
 

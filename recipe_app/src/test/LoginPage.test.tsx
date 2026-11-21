@@ -101,16 +101,9 @@ describe("LoginPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Google provider is unavailable");
   });
 
-  it("uses the same callback-safe flow for Apple", async () => {
-    const user = userEvent.setup();
-    mockAuth.signInWithOAuth.mockResolvedValue({ error: null });
+  it("does not offer Apple sign-in", () => {
     renderLogin();
 
-    await user.click(screen.getByRole("button", { name: "Continue with Apple" }));
-
-    expect(mockAuth.signInWithOAuth).toHaveBeenCalledWith({
-      provider: "apple",
-      options: { redirectTo: window.location.origin },
-    });
+    expect(screen.queryByRole("button", { name: "Continue with Apple" })).not.toBeInTheDocument();
   });
 });

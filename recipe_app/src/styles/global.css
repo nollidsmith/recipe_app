@@ -59,7 +59,7 @@ h1, h2 {
 .auth-form-panel { display: flex; flex-direction: column; justify-content: center; width: min(100%, 580px); margin: auto; }
 .auth-heading h2 { font-size: clamp(2.1rem, 4vw, 3.8rem); }
 .auth-heading .muted { margin-top: 16px; }
-.oauth-grid { display: grid; gap: 12px; margin-top: 30px; grid-template-columns: repeat(2, 1fr); }
+.oauth-grid { display: grid; gap: 12px; margin-top: 30px; grid-template-columns: 1fr; }
 .divider { display: flex; align-items: center; gap: 12px; margin: 28px 0; color: #758196; font-size: .82rem; text-transform: uppercase; letter-spacing: .12em; }
 .divider::before, .divider::after { content: ""; height: 1px; flex: 1; background: rgba(255,255,255,.14); }
 .auth-form { display: grid; gap: 10px; }

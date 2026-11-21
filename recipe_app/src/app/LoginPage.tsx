@@ -65,7 +65,7 @@ export default function LoginPage() {
     }
   };
 
-  const oauth = async (provider: "google" | "apple") => {
+  const oauth = async (provider: "google") => {
     setError("");
     setBusy(true);
     try {
@@ -112,9 +112,6 @@ export default function LoginPage() {
           <div className="oauth-grid">
             <button className="button button-secondary" type="button" onClick={() => oauth("google")} disabled={busy}>
               Continue with Google
-            </button>
-            <button className="button button-secondary" type="button" onClick={() => oauth("apple")} disabled={busy}>
-              Continue with Apple
             </button>
           </div>
         )}

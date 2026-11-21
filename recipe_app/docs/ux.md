@@ -8,7 +8,7 @@ Home cooks who want one place to remember recipes, understand what is in the pan
 
 ## Core journeys
 
-1. Sign up or sign in with email, Google, or Apple.
+1. Sign up or sign in with email or Google.
 2. Land on the recipe hub and see saved recipes or a helpful empty state.
 3. Add a recipe with ingredients, instructions, timing, servings, and an optional image.
 4. Add pantry items and see low-stock/expiring states.
@@ -16,7 +16,7 @@ Home cooks who want one place to remember recipes, understand what is in the pan
 
 ## Authentication states
 
-The UI supports validation, loading, success, expired-session, and password-reset states. OAuth provider setup and complete cancellation/failure/email-verification coverage remain unverified.
+The UI supports validation, loading, success, expired-session, and password-reset states. Google OAuth provider setup is verified in production; complete cancellation/failure/email-verification coverage remains unverified.
 
 ## Image-upload journey
 

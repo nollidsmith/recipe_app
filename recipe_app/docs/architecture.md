@@ -10,7 +10,7 @@ PantryPilot is a browser-based recipe and pantry application. Users authenticate
 
 ```text
 Browser (React/Vite)
-  ├── Supabase Auth (email/password, Google, Apple)
+  ├── Supabase Auth (email/password, Google)
   ├── Supabase PostgreSQL (user-owned data + row-level security)
   └── Supabase Storage (user recipe and pantry images)
 
@@ -40,7 +40,7 @@ The app uses client-side routing. A Hostinger SPA fallback is provided by the de
 
 ## Authentication and OAuth
 
-Supabase Auth is the identity source. OAuth uses the installed client defaults; PKCE is not explicitly configured. Redirect origins for local, preview, and production are:
+Supabase Auth is the identity source. OAuth uses the installed client defaults; PKCE is not explicitly configured. Redirect origins are:
 
 - `http://localhost:5173` — local development
 - Preview URL — none configured for the current release.

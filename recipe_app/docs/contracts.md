@@ -30,7 +30,6 @@ No service-role, database-password, or OAuth client secret may be a Vite client 
 
 - Email/password sign-up and sign-in
 - Google OAuth
-- Apple OAuth
 - Password-reset request and callback
 - Session refresh and logout
 - OAuth redirect allowlist: `http://localhost:5173` and `https://recipe.dillonlsmith.com`; no preview deployment is configured.
@@ -50,7 +49,7 @@ No service-role, database-password, or OAuth client secret may be a Vite client 
 
 ## Integrations
 
-- Supabase Auth: email/password, Google OAuth, Apple OAuth
+- Supabase Auth: email/password and Google OAuth
 - Supabase PostgreSQL: application data
 - Supabase Storage: authenticated recipe and pantry item image files
 - GitHub Actions: CI checks

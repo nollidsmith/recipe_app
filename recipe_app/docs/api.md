@@ -9,12 +9,11 @@ PantryPilot has no custom HTTP API in the shared-hosting MVP. The browser calls 
 - Sign up with email/password
 - Sign in with email/password
 - Start Google OAuth
-- Start Apple OAuth
 - Request password reset
 - Sign out
 - Read the current session
 
-OAuth configuration must include local, preview, and production redirect URLs. Exact preview and production URLs are UNKNOWN — needs human confirmation.
+OAuth configuration includes the local and production redirect URLs; no preview deployment is configured.
 
 ## Data operations
 
