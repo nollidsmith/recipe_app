@@ -79,15 +79,15 @@ export default function RecipeFormPage() {
         <section className="form-section">
           <div className="section-heading"><p className="eyebrow">Start here</p><h2>Recipe details</h2></div>
           <div className="form-grid form-grid-wide">
-            <label>Recipe title<input value={draft.title} onChange={(event) => update("title", event.target.value)} placeholder="e.g. Weeknight tomato pasta" required /></label>
-            <label>Description<textarea value={draft.description} onChange={(event) => update("description", event.target.value)} placeholder="What makes this recipe worth saving?" rows={3} /></label>
+            <label htmlFor="recipe-title">Recipe title<input id="recipe-title" value={draft.title} onChange={(event) => update("title", event.target.value)} placeholder="e.g. Weeknight tomato pasta" required /></label>
+            <label htmlFor="recipe-description">Description<textarea id="recipe-description" value={draft.description} onChange={(event) => update("description", event.target.value)} placeholder="What makes this recipe worth saving?" rows={3} /></label>
           </div>
           <div className="form-grid form-grid-three">
-            <label>Prep minutes<input type="number" min="0" value={draft.prepMinutes} onChange={(event) => update("prepMinutes", event.target.value)} /></label>
-            <label>Cook minutes<input type="number" min="0" value={draft.cookMinutes} onChange={(event) => update("cookMinutes", event.target.value)} /></label>
-            <label>Servings<input type="number" min="1" value={draft.servings} onChange={(event) => update("servings", event.target.value)} /></label>
+            <label htmlFor="prep-minutes">Prep minutes<input id="prep-minutes" type="number" min="0" value={draft.prepMinutes} onChange={(event) => update("prepMinutes", event.target.value)} /></label>
+            <label htmlFor="cook-minutes">Cook minutes<input id="cook-minutes" type="number" min="0" value={draft.cookMinutes} onChange={(event) => update("cookMinutes", event.target.value)} /></label>
+            <label htmlFor="servings">Servings<input id="servings" type="number" min="1" value={draft.servings} onChange={(event) => update("servings", event.target.value)} /></label>
           </div>
-          <label>Difficulty<select value={draft.difficulty} onChange={(event) => update("difficulty", event.target.value as Difficulty)}><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></label>
+          <label htmlFor="difficulty">Difficulty<select id="difficulty" value={draft.difficulty} onChange={(event) => update("difficulty", event.target.value as Difficulty)}><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></label>
         </section>
 
         <section className="form-section">
@@ -134,7 +134,7 @@ export default function RecipeFormPage() {
 
         <section className="form-section">
           <div className="section-heading"><p className="eyebrow">Make it yours</p><h2>Instructions</h2></div>
-          <label>Cooking instructions<textarea value={draft.instructions} onChange={(event) => update("instructions", event.target.value)} placeholder="Write the steps in the order you cook them." rows={9} required /></label>
+          <label htmlFor="instructions">Cooking instructions<textarea id="instructions" value={draft.instructions} onChange={(event) => update("instructions", event.target.value)} placeholder="Write the steps in the order you cook them." rows={9} required /></label>
         </section>
 
         <div className="form-actions"><Link className="button button-secondary" to="/">Cancel</Link><button className="button button-primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save recipe"}</button></div>

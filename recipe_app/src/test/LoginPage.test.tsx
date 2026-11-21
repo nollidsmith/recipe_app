@@ -76,4 +76,41 @@ describe("LoginPage", () => {
       redirectTo: `${window.location.origin}/reset-password`,
     });
   });
+
+  it("starts OAuth with the production-safe origin and remembers the requested route", async () => {
+    const user = userEvent.setup();
+    mockAuth.signInWithOAuth.mockResolvedValue({ error: null });
+    render(<MemoryRouter initialEntries={[{ pathname: "/login", state: { from: { pathname: "/pantry", search: "?filter=low", hash: "#stock" } } }]}><LoginPage /></MemoryRouter>);
+
+    await user.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    expect(mockAuth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    expect(window.sessionStorage.getItem("pantrypilot.oauth.returnTo")).toBe("/pantry?filter=low#stock");
+  });
+
+  it("surfaces an OAuth initiation error", async () => {
+    const user = userEvent.setup();
+    mockAuth.signInWithOAuth.mockResolvedValue({ error: new Error("Google provider is unavailable") });
+    renderLogin();
+
+    await user.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Google provider is unavailable");
+  });
+
+  it("uses the same callback-safe flow for Apple", async () => {
+    const user = userEvent.setup();
+    mockAuth.signInWithOAuth.mockResolvedValue({ error: null });
+    renderLogin();
+
+    await user.click(screen.getByRole("button", { name: "Continue with Apple" }));
+
+    expect(mockAuth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: "apple",
+      options: { redirectTo: window.location.origin },
+    });
+  });
 });

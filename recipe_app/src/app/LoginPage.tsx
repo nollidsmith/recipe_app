@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthProvider";
+import { rememberOAuthReturnTo } from "./oauth";
 
 type FormMode = "sign-in" | "sign-up" | "reset";
 
@@ -14,6 +15,7 @@ function readableError(message: string) {
 
 export default function LoginPage() {
   const { session } = useAuth();
+  const location = useLocation();
   const [mode, setMode] = useState<FormMode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,12 +68,18 @@ export default function LoginPage() {
   const oauth = async (provider: "google" | "apple") => {
     setError("");
     setBusy(true);
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: window.location.origin },
-    });
-    if (oauthError) {
-      setError(oauthError.message);
+    try {
+      const from = typeof location.state?.from?.pathname === "string"
+        ? `${location.state.from.pathname}${location.state.from.search ?? ""}${location.state.from.hash ?? ""}`
+        : "/";
+      rememberOAuthReturnTo(from);
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin },
+      });
+      if (oauthError) throw oauthError;
+    } catch (caught) {
+      setError(readableError(caught instanceof Error ? caught.message : "Unable to start social sign-in."));
       setBusy(false);
     }
   };

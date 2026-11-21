@@ -15,7 +15,7 @@ export default function ResetPasswordPage() {
     return (
       <main className="loading-shell">
         <div className="loading-mark">PP</div>
-        <p>Preparing your password reset…</p>
+        <p role="status" aria-live="polite">Preparing your password reset…</p>
       </main>
     );
   }
