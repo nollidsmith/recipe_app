@@ -1,6 +1,6 @@
 # PantryPilot Architecture
 
-**Status:** Section 0 baseline, reconciled to source on 2026-11-19
+**Status:** Section 1 recipe import, reconciled to source on 2026-11-20
 
 ## Purpose
 
@@ -17,6 +17,14 @@ Browser (React/Vite)
 GitHub → GitHub Actions → Vite build → Hostinger shared hosting
 ```
 
+Authenticated recipe import adds:
+
+```text
+Browser → private recipe-imports Storage + recipe_imports job
+       → pgmq recipe-imports queue → recipe-import-worker → recipe-import Edge Function → provider
+       → normalized editable draft → existing recipe form → explicit save
+```
+
 The browser is the deployed application. There is no custom Node.js server in the shared-hosting deployment model. Supabase is the backend boundary and the database is the source of truth.
 
 ## Security boundaries
@@ -26,6 +34,10 @@ The browser is the deployed application. There is no custom Node.js server in th
 - The browser may use only the Supabase project URL and publishable/anonymous key. Service-role keys must never be bundled into Vite output.
 - Image uploads are restricted by authenticated user, file type, size, and storage path.
 - Mutations validate input in the client for usability and at the database/API boundary for truth.
+- Recipe import jobs are owner-scoped and client inserts are limited to canonical queued jobs. Processing fields and provider calls are server-owned by the Edge Function.
+- Imported sources are temporary; extracted content is never written to `recipes` until the user explicitly saves the reviewed form.
+- Queue mode is opt-in through an Edge Function secret/configuration flag. The inline path remains available until pgmq, the worker token, and the worker deployment are verified in that environment.
+- Queue and cleanup functions use service-role-only execution or `SECURITY DEFINER`; client roles cannot read queue messages or mutate processing fields.
 
 ## Frontend structure
 

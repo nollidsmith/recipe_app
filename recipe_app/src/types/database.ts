@@ -39,6 +39,12 @@ export type Database = {
         Update: { user_id?: string; recipe_id?: string; created_at?: string };
         Relationships: [{ foreignKeyName: "favorites_recipe_id_fkey"; columns: ["recipe_id"]; isOneToOne: false; referencedRelation: "recipes"; referencedColumns: ["id"] }];
       };
+      recipe_imports: {
+        Row: { id: string; user_id: string; source_path: string | null; source_filename: string; mime_type: string; byte_size: number; status: string; draft_json: Json | null; confidence_json: Json; warnings_json: Json; error_code: string | null; error_message: string | null; attempt_count: number; expires_at: string; provider_request_id: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id: string; source_path: string; source_filename: string; mime_type: string; byte_size: number; status?: string; draft_json?: Json | null; confidence_json?: Json; warnings_json?: Json; error_code?: string | null; error_message?: string | null; attempt_count?: number; expires_at?: string; provider_request_id?: string | null; created_at?: string; updated_at?: string };
+        Update: { id?: string; user_id?: string; source_path?: string | null; source_filename?: string; mime_type?: string; byte_size?: number; status?: string; draft_json?: Json | null; confidence_json?: Json; warnings_json?: Json; error_code?: string | null; error_message?: string | null; attempt_count?: number; expires_at?: string; provider_request_id?: string | null; created_at?: string; updated_at?: string };
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     Functions: { [_ in never]: never };

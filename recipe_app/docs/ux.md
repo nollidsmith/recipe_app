@@ -1,6 +1,6 @@
 # PantryPilot UX Baseline
 
-**Status:** Section 0 baseline, reconciled to current UI on 2026-11-19
+**Status:** Section 1 recipe import, reconciled to current UI on 2026-11-20
 
 ## Primary user
 
@@ -11,8 +11,9 @@ Home cooks who want one place to remember recipes, understand what is in the pan
 1. Sign up or sign in with email or Google.
 2. Land on the recipe hub and see saved recipes or a helpful empty state.
 3. Add a recipe with ingredients, instructions, timing, servings, and an optional image.
-4. Add pantry items and see low-stock/expiring states.
-5. Use placeholder screens for shopping, popular recipes, and profile.
+4. Import a printed recipe PDF/photo, review the editable AI-generated draft, and explicitly save it.
+5. Add pantry items and see low-stock/expiring states.
+6. Use placeholder screens for shopping, popular recipes, and profile.
 
 ## Authentication states
 
@@ -33,11 +34,22 @@ Every screen must define loading, empty, success, and actionable error states. D
 - Blue: information, secondary actions, and supporting highlights
 - Recipe imagery is supplementary content and must never carry meaning by color alone.
 
+## Recipe import review
+
+The import flow offers PDF/image selection with camera capture, shows processing status, populates the existing recipe form, and displays a prominent review warning. Imported values remain editable and are never saved automatically. Provider warnings and low-confidence fields are surfaced as review guidance; printed recipes are the MVP and handwriting is not promised.
+
 ## Accessibility
 
 Target WCAG 2.2 AA. Support keyboard navigation, visible focus, sufficient contrast, responsive touch targets, semantic headings, screen-reader labels, and reduced motion.
 
-Accessibility conformance is a target, not verified compliance; no automated audit, keyboard-navigation test, contrast verification, or screen-reader test is configured. Source verification currently covers local image previews, removal, and reduced-motion CSS. Recipe cards expose inline instructions and deletion; there is no recipe detail/edit screen. Upload progress, cancel/retry, image-dimension validation, pantry-image replacement, and automated accessibility coverage are not implemented.
+Accessibility conformance is a target, not verified full compliance. Automated
+smoke coverage now checks accessible names and keyboard tab-order safety for the
+recipe editor in `src/test/accessibility.test.tsx`; contrast, axe, and
+screen-reader verification remain unconfigured. Source verification currently
+covers local image previews, removal, and reduced-motion CSS. Recipe cards expose
+inline instructions and deletion; there is no recipe detail/edit screen. Upload
+progress, cancel/retry, image-dimension validation, and pantry-image replacement
+are not implemented.
 
 <!-- update-this-doc-when: src/app/**, src/components/**, src/styles/**, src/test/** -->
 

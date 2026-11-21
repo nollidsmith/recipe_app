@@ -1,6 +1,6 @@
 # PantryPilot Data Model
 
-**Status:** Section 0 baseline, reconciled to migrations on 2026-11-19
+**Status:** Section 1 recipe import, reconciled to migrations on 2026-11-20
 
 ## Ownership rule
 
@@ -80,6 +80,19 @@ Constraints: index `(user_id, is_completed, created_at)`, `source_recipe_id` for
 - `created_at` — timestamp
 - composite primary key on user and recipe
 
+### `recipe_imports` (implemented for T-009)
+
+- `id` — UUID primary key
+- `user_id` — UUID owner
+- `source_path`, `source_filename`, `mime_type`, `byte_size` — temporary source metadata
+- `status` — queued, processing, ready, needs_review, or failed
+- `draft_json` — normalized editable `RecipeDraft`, never a saved recipe by itself
+- `confidence_json`, `warnings_json` — provider review metadata
+- `error_code`, `error_message`, `attempt_count`, `provider_request_id` — processing metadata
+- `expires_at`, `created_at`, `updated_at` — timestamps
+
+RLS permits users to view/delete their own cleaned, non-processing jobs and insert only canonical queued jobs. There is no client update policy; processing fields are Edge Function-owned. Sources live in the private `recipe-imports` bucket. Queue messages contain only the import ID and are read/deleted by service-role-only RPCs. Cleanup is attempted on terminal processing paths and by `cleanup_expired_recipe_import_sources()` when pg_cron is available; failed cleanup is recorded as `source_cleanup_pending` and retried by the protected reaper. `expires_at` remains the retention deadline if scheduling is unavailable.
+
 ## Image metadata
 
 Recipe images are not stored as raw blobs in PostgreSQL. `recipes.image_path` references a private Storage object. If image metadata grows beyond the recipe row, a future `recipe_images` table may hold `id`, `recipe_id`, `user_id`, `storage_path`, `original_filename`, `mime_type`, `byte_size`, `width`, `height`, `alt_text`, and timestamps. That table is not part of the initial schema until upload requirements are finalized.
@@ -94,7 +107,7 @@ Recipe images are not stored as raw blobs in PostgreSQL. `recipes.image_path` re
 
 ## Deletion and retention
 
-Database rows cascade from `auth.users` through profiles, recipes, pantry items, shopping items, favorites, and recipe ingredients; deleting a recipe sets shopping-list `source_recipe_id` to null. Storage objects do not cascade. Storage cleanup and retention duration remain UNKNOWN — needs human confirmation.
+Database rows cascade from `auth.users` through profiles, recipes, pantry items, shopping items, favorites, and recipe ingredients; deleting a recipe sets shopping-list `source_recipe_id` to null. Storage objects do not cascade. Recipe-import cleanup is performed through the Supabase Storage API, with the one-hour source retention deadline defined by the `recipe_imports` migration.
 
 ## Derived behavior
 
