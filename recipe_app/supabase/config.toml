@@ -119,6 +119,16 @@ enabled = true
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
+# Both functions perform their own authentication. recipe-import validates the
+# user's Supabase bearer token; recipe-import-worker validates the private
+# RECIPE_IMPORT_WORKER_TOKEN. This is required because the worker token is not
+# a Supabase JWT and must never be replaced with a service-role key in a URL.
+[functions.recipe-import]
+verify_jwt = false
+
+[functions.recipe-import-worker]
+verify_jwt = false
+
 # Uncomment to configure local storage buckets
 # [storage.buckets.images]
 # public = false
@@ -327,13 +337,6 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack_oidc`, `spotify`, `workos`, `zoom`.
-[auth.external.apple]
-enabled = false
-client_id = ""
-# DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
-secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
-# Overrides the default auth callback URL derived from auth.external_url.
-redirect_uri = ""
 # Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
 # or any other third-party OIDC providers.
 url = ""

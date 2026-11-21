@@ -44,7 +44,7 @@ export default function RecipeHubPage() {
     <section className="recipe-section" aria-labelledby="recipes-title">
       <Toast message={toast} />
       {pendingDelete && <ConfirmDialog title={`Delete ${pendingDelete.title}?`} description="This cannot be undone." confirmLabel="Delete recipe" onCancel={() => setPendingDelete(null)} onConfirm={() => { const recipe = pendingDelete; setPendingDelete(null); void remove(recipe); }} />}
-      <div className="section-heading section-heading-inline"><div><p className="eyebrow">Your collection</p><h2 id="recipes-title">Recipes</h2></div><Link className="button button-primary" to="/recipes/new">+ Add recipe</Link></div>
+      <div className="section-heading section-heading-inline"><div><p className="eyebrow">Your collection</p><h2 id="recipes-title">Recipes</h2></div><div className="recipe-actions"><Link className="button button-secondary" to="/recipes/new#import-title">Scan or upload</Link><Link className="button button-primary" to="/recipes/new">+ Add recipe</Link></div></div>
       {error && <div className="notice error" role="alert">{error}</div>}
       {loading && <div className="recipe-state" role="status" aria-live="polite">Loading your recipes…</div>}
       {!loading && loadFailed && <div className="empty-state"><span className="empty-icon">!</span><h3>We couldn’t load your recipes.</h3><p className="muted">Check your connection and try again.</p><button className="button button-primary" type="button" onClick={() => void loadRecipes()}>Try again</button></div>}

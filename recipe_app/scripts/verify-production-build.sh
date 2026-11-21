@@ -15,6 +15,13 @@ npm run build
 
 test -f dist/index.html || { printf '%s\n' "Production build did not create dist/index.html" >&2; exit 1; }
 test -f dist/.htaccess || { printf '%s\n' "Production build is missing the SPA fallback .htaccess" >&2; exit 1; }
+test -d dist/assets || { printf '%s\n' "Production build is missing the assets directory" >&2; exit 1; }
+test "$(find dist/assets -type f | wc -l | tr -d ' ')" -gt 0 || { printf '%s\n' "Production build contains no generated assets" >&2; exit 1; }
+
+if grep -R -E -q -- 'SUPABASE_SERVICE_ROLE_KEY|GEMINI_API_KEY|BEGIN PRIVATE KEY' dist; then
+  printf '%s\n' "A server-side credential marker was found in the production bundle" >&2
+  exit 1
+fi
 
 if ! grep -R -F -q -- "$VITE_SUPABASE_URL" dist/assets; then
   printf '%s\n' "Production Supabase URL was not embedded in the generated assets" >&2

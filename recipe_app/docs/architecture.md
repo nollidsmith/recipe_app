@@ -1,6 +1,6 @@
 # PantryPilot Architecture
 
-**Status:** Section 0 baseline, reconciled to source on 2026-11-19
+**Status:** Section 1 recipe import, reconciled to source on 2026-11-20
 
 ## Purpose
 
@@ -10,11 +10,19 @@ PantryPilot is a browser-based recipe and pantry application. Users authenticate
 
 ```text
 Browser (React/Vite)
-  ├── Supabase Auth (email/password, Google, Apple)
+  ├── Supabase Auth (email/password, Google)
   ├── Supabase PostgreSQL (user-owned data + row-level security)
   └── Supabase Storage (user recipe and pantry images)
 
 GitHub → GitHub Actions → Vite build → Hostinger shared hosting
+```
+
+Authenticated recipe import adds:
+
+```text
+Browser → private recipe-imports Storage + recipe_imports job
+       → pgmq recipe-imports queue → recipe-import-worker → recipe-import Edge Function → provider
+       → normalized editable draft → existing recipe form → explicit save
 ```
 
 The browser is the deployed application. There is no custom Node.js server in the shared-hosting deployment model. Supabase is the backend boundary and the database is the source of truth.
@@ -26,6 +34,10 @@ The browser is the deployed application. There is no custom Node.js server in th
 - The browser may use only the Supabase project URL and publishable/anonymous key. Service-role keys must never be bundled into Vite output.
 - Image uploads are restricted by authenticated user, file type, size, and storage path.
 - Mutations validate input in the client for usability and at the database/API boundary for truth.
+- Recipe import jobs are owner-scoped and client inserts are limited to canonical queued jobs. Processing fields and provider calls are server-owned by the Edge Function.
+- Imported sources are temporary; extracted content is never written to `recipes` until the user explicitly saves the reviewed form.
+- Queue mode is opt-in through an Edge Function secret/configuration flag. The inline path remains available until pgmq, the worker token, and the worker deployment are verified in that environment.
+- Queue and cleanup functions use service-role-only execution or `SECURITY DEFINER`; client roles cannot read queue messages or mutate processing fields.
 
 ## Frontend structure
 
@@ -36,17 +48,17 @@ The browser is the deployed application. There is no custom Node.js server in th
 - `src/types/` — shared TypeScript models and Supabase-generated types
 - `public/images/` — non-user static assets only; user uploads live in Supabase Storage
 
-The app uses client-side routing. A Hostinger SPA fallback is required but its rewrite configuration is not yet verified. Data access is colocated in feature modules rather than scattered through presentational components.
+The app uses client-side routing. A Hostinger SPA fallback is provided by the deployed `public_html/.htaccess`. Data access is colocated in feature modules rather than scattered through presentational components.
 
 ## Authentication and OAuth
 
-Supabase Auth is the identity source. OAuth uses the installed client defaults; PKCE is not explicitly configured. Redirect origins for local, preview, and production are:
+Supabase Auth is the identity source. OAuth uses the installed client defaults; PKCE is not explicitly configured. Redirect origins are:
 
 - `http://localhost:5173` — local development
-- Preview URL — UNKNOWN — needs human confirmation
+- Preview URL — none configured for the current release.
 - Production Hostinger domain — `https://recipe.dillonlsmith.com`
 
-OAuth cancellation, provider failure, expired sessions, account linking, email verification, and password-reset behavior must have documented UI states before Section 1 implementation.
+OAuth cancellation, provider failure, expired sessions, email verification, and password-reset behavior have documented UI states. Account linking is disabled for the current release.
 
 ## Image storage
 
@@ -55,7 +67,7 @@ User images are stored as files in private `recipe-images` and `pantry-images` S
 ## Known unknowns
 
 - Exact Hostinger plan name: UNKNOWN — needs human confirmation.
-- Supabase project URL and production project identity: UNKNOWN — created during setup.
+- Supabase production project: `PantryPilot` (`canbplxrqkhtvycxtfag`, `https://canbplxrqkhtvycxtfag.supabase.co`).
 - Final image size and MIME allowlist: 5 MB and JPEG/PNG/WebP. Dimensions are not validated.
 - Live migration application and cross-user Storage isolation: UNKNOWN — needs human confirmation.
 

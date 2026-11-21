@@ -70,6 +70,18 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
+      - name: Verify build artifact
+        run: sh scripts/verify-build-artifact.sh
+
+      - name: Verify recipe import security contracts
+        run: sh scripts/test/test-recipe-import-contract.sh
+
+      - name: Run fresh migration verification when configured
+        env:
+          SUPABASE_MIGRATION_TEST_DB_URL: ${{ secrets.SUPABASE_MIGRATION_TEST_DB_URL }}
+          SUPABASE_MIGRATION_TEST_CONFIRM: ${{ secrets.SUPABASE_MIGRATION_TEST_CONFIRM }}
+        run: sh scripts/test/test-fresh-migrations.sh
+
   production-bundle:
     name: configured production bundle
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -93,3 +105,48 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.SUPABASE_PRODUCTION_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_PRODUCTION_ANON_KEY }}
         run: npm run build:production
+
+  supabase-integration:
+    name: Supabase integration smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: recipe_app
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Run live Supabase smoke checks
+        env:
+          SUPABASE_TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          SUPABASE_TEST_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+        run: sh scripts/run-supabase-integration-tests.sh
+
+  supabase-preflight:
+    name: Supabase configured-environment preflight
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: recipe_app
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Run configured Supabase preflight
+        env:
+          SUPABASE_PREFLIGHT_URL: ${{ secrets.SUPABASE_PREFLIGHT_URL }}
+          SUPABASE_PREFLIGHT_ANON_KEY: ${{ secrets.SUPABASE_PREFLIGHT_ANON_KEY }}
+          SUPABASE_PREFLIGHT_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_PREFLIGHT_SERVICE_ROLE_KEY }}
+          SUPABASE_PREFLIGHT_DB_URL: ${{ secrets.SUPABASE_PREFLIGHT_DB_URL }}
+          SUPABASE_PREFLIGHT_ORIGIN: ${{ secrets.SUPABASE_PREFLIGHT_ORIGIN }}
+          SUPABASE_PREFLIGHT_QUEUE_ENABLED: ${{ secrets.SUPABASE_PREFLIGHT_QUEUE_ENABLED }}
+          SUPABASE_PREFLIGHT_QUEUE_READY: ${{ secrets.SUPABASE_PREFLIGHT_QUEUE_READY }}
+          SUPABASE_PREFLIGHT_WORKER_TOKEN: ${{ secrets.SUPABASE_PREFLIGHT_WORKER_TOKEN }}
+        run: sh scripts/supabase-preflight.sh

@@ -37,3 +37,12 @@ export type RecipeDraft = {
   difficulty: Difficulty;
   ingredients: Array<Pick<RecipeIngredient, "name" | "quantity" | "unit" | "notes">>;
 };
+
+export type RecipeImportStatus = "queued" | "processing" | "ready" | "needs_review" | "failed";
+
+export type RecipeImportResult = {
+  draft: RecipeDraft;
+  warnings: string[];
+  confidence: Record<string, number>;
+  sourceName: string;
+};

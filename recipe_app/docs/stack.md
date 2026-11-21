@@ -8,7 +8,7 @@
 | Language | TypeScript | Safer data contracts and refactoring |
 | Build tool | Vite | Produces static assets compatible with Hostinger shared hosting |
 | Styling | Plain CSS | Readable, direct red/black/blue design system with minimal build complexity |
-| Auth | Supabase Auth | Email/password, Google, and Apple login |
+| Auth | Supabase Auth | Email/password and Google login |
 | Database | Supabase PostgreSQL | Relational recipe, ingredient, and inventory data |
 | File storage | Supabase Storage | Authenticated user recipe images |
 | CI | GitHub Actions | Repeatable checks on pull requests and `main` |

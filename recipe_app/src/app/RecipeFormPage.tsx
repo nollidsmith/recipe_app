@@ -1,6 +1,7 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createRecipe, deleteRecipe, uploadRecipeImage, validateRecipeImage } from "../lib/recipes";
+import { importRecipeFile, validateRecipeImport } from "../lib/recipeImport";
 import type { Difficulty, RecipeDraft } from "../types/recipe";
 
 const emptyIngredient = { name: "", quantity: null, unit: "", notes: "" };
@@ -16,6 +17,21 @@ const initialDraft: RecipeDraft = {
   ingredients: [emptyIngredient],
 };
 
+const confidenceLabels: Record<string, string> = {
+  title: "title",
+  description: "description",
+  instructions: "instructions",
+  prepMinutes: "prep time",
+  cookMinutes: "cook time",
+  servings: "servings",
+  difficulty: "difficulty",
+  ingredients: "ingredients",
+};
+
+function formatConfidenceField(field: string) {
+  return confidenceLabels[field] ?? field.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+}
+
 export default function RecipeFormPage() {
   const navigate = useNavigate();
   const [draft, setDraft] = useState<RecipeDraft>(initialDraft);
@@ -23,6 +39,11 @@ export default function RecipeFormPage() {
   const [busy, setBusy] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState("");
+  const [importWarning, setImportWarning] = useState("");
+  const [retryFile, setRetryFile] = useState<File | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => () => {
     if (imagePreview) URL.revokeObjectURL(imagePreview);
@@ -67,6 +88,41 @@ export default function RecipeFormPage() {
     }
   };
 
+  const importFile = async (file: File | undefined) => {
+    if (!file) return;
+    setError("");
+    setImportWarning("");
+    setRetryFile(null);
+    let canRetry = false;
+    try {
+      validateRecipeImport(file);
+      setRetryFile(file);
+      canRetry = true;
+      setImporting(true);
+      setImportStatus("Uploading source…");
+      const result = await importRecipeFile(file);
+      const hasDraftContent = draft.title.trim() || draft.instructions.trim() || draft.ingredients.some((ingredient) => ingredient.name.trim());
+      if (hasDraftContent && !window.confirm("Replace the current draft with the imported recipe?")) {
+        setImportStatus("Import discarded. Choose another file or continue editing.");
+        return;
+      }
+      setDraft(result.draft);
+      const lowConfidence = Object.entries(result.confidence).filter(([, score]) => score < 0.7).map(([field]) => field);
+      const confidenceText = lowConfidence.length > 0 ? ` Review these fields closely: ${lowConfidence.map(formatConfidenceField).join(", ")}.` : "";
+      const warningText = result.warnings.length > 0 ? ` ${result.warnings.join(" ")}` : "";
+      setImportWarning(`AI-generated draft — verify ingredients, quantities, temperatures, and timings before saving.${warningText}`);
+      if (confidenceText) setImportWarning((current) => `${current}${confidenceText}`);
+      setImportStatus(`Draft prepared from ${result.sourceName}.`);
+      setRetryFile(null);
+      if (importInputRef.current) importInputRef.current.value = "";
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to read that recipe.");
+      setImportStatus(canRetry ? "Import failed. Retry the same file or choose a different file." : "Import failed. Choose a different file.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <main className="recipe-editor-shell">
       <header className="recipe-editor-header">
@@ -76,6 +132,15 @@ export default function RecipeFormPage() {
 
       <form className="recipe-form" onSubmit={submit}>
         {error && <div className="notice error" role="alert">{error}</div>}
+        <fieldset disabled={importing} className="form-fieldset">
+        <section className="form-section import-section" aria-labelledby="import-title">
+          <div className="section-heading"><p className="eyebrow">New</p><h2 id="import-title">Scan or upload a recipe</h2><p className="muted">We’ll prepare an editable draft. Nothing is saved until you review it and choose Save recipe.</p></div>
+          <p className="form-help">Your selected file is sent to Google Gemini for extraction. Temporary source files are deleted after processing when cleanup succeeds. Review everything before saving.</p>
+          <label className="import-picker" htmlFor="recipe-import">Choose a PDF or paper recipe<input ref={importInputRef} id="recipe-import" aria-label="Choose a PDF or paper recipe" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" capture="environment" disabled={importing} onChange={(event) => void importFile(event.target.files?.[0])} /><span>PDF, JPEG, PNG, or WebP · up to 10 MB · printed recipes work best</span></label>
+          {importStatus && <p className="form-help" role="status" aria-live="polite">{importing ? `${importStatus} Reading recipe…` : importStatus}</p>}
+          {!importing && importStatus && <div className="import-recovery">{retryFile && <button className="button button-secondary" type="button" onClick={() => void importFile(retryFile)}>Retry import</button>}<button className="text-button" type="button" onClick={() => { setRetryFile(null); setError(""); setImportStatus(""); importInputRef.current?.click(); }}>Choose a different file</button></div>}
+          {importWarning && <div className="notice warning" role="alert">{importWarning}</div>}
+        </section>
         <section className="form-section">
           <div className="section-heading"><p className="eyebrow">Start here</p><h2>Recipe details</h2></div>
           <div className="form-grid form-grid-wide">
@@ -137,7 +202,8 @@ export default function RecipeFormPage() {
           <label htmlFor="instructions">Cooking instructions<textarea id="instructions" value={draft.instructions} onChange={(event) => update("instructions", event.target.value)} placeholder="Write the steps in the order you cook them." rows={9} required /></label>
         </section>
 
-        <div className="form-actions"><Link className="button button-secondary" to="/">Cancel</Link><button className="button button-primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save recipe"}</button></div>
+        <div className="form-actions"><Link className="button button-secondary" to="/">Cancel</Link><button className="button button-primary" type="submit" disabled={busy || importing}>{busy ? "Saving…" : importing ? "Reading…" : "Save recipe"}</button></div>
+        </fieldset>
       </form>
     </main>
   );
