@@ -58,7 +58,7 @@ No service-role, database-password, or OAuth client secret may be a Vite client 
 - Supabase Auth: email/password and Google OAuth
 - Supabase PostgreSQL: application data
 - Supabase Storage: authenticated recipe and pantry item image files
-- GitHub Actions: CI checks
+- GitHub Actions: CI checks and protected production deployment
 - Hostinger shared hosting: static production files
 - Custom API server: none planned
 - Supabase Edge Function: authenticated `recipe-import` validates and normalizes provider output into an editable draft; it never creates a recipe row.
@@ -75,9 +75,9 @@ The application depends on `profiles`, `recipes`, `recipe_ingredients`, `pantry_
 - Vite source variables use the `VITE_` prefix.
 - Production build command is `npm run build` from `recipe_app/` or `npm --prefix recipe_app run build` from the workspace root; output is `recipe_app/dist/`.
 - Hostinger must serve `index.html` for client-side routes; the deployed `public_html/.htaccess` provides the SPA rewrite fallback.
-- Root `.github/workflows/recipe-app-checks.yml` runs procedure checks and the `typecheck, test, and build` job; it does not archive or deploy `dist/`.
-- Hostinger deployment uses File Manager to upload a packaged static build and extract it into `public_html` with overwrite enabled. The prior deployment archive should be retained until the new release is verified.
-- Hostinger deployment secrets are not stored in the repository; production build inputs are supplied outside committed source.
+- Root `.github/workflows/recipe-app-checks.yml` runs procedure checks and the `typecheck, test, and build` job. A push to `main` additionally requires the configured production bundle, Supabase preflight, and integration checks before the protected `deploy-production` job runs.
+- The `deploy-production` job builds `dist/` with production variables, verifies the bundle, creates a compressed backup outside the Hostinger web root, synchronizes the static bundle to the configured `public_html` path over SSH, and runs both `scripts/verify-production-site.sh` and the Playwright browser smoke suite against `https://recipe.dillonlsmith.com/`. A failed synchronization or health check restores the backup and reruns both smoke checks. It uses the protected GitHub `production` environment and a concurrency lock.
+- Hostinger deployment secrets are not stored in the repository. The protected `production` environment supplies the Supabase production variables plus `HOSTINGER_SSH_HOST`, `HOSTINGER_SSH_PORT`, `HOSTINGER_SSH_USER`, `HOSTINGER_SSH_PRIVATE_KEY`, `HOSTINGER_KNOWN_HOSTS`, and `HOSTINGER_DEPLOY_PATH`.
 
 ## Recipe import contract
 

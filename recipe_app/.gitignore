@@ -1,3 +1,4 @@
 # Local-only agentic playbook wiring.
 /AGENTS.md
 /.githooks/
+/.local/production-secrets/

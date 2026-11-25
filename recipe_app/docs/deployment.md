@@ -15,8 +15,8 @@
 3. Open a GitHub pull request.
 4. GitHub Actions runs the required checks.
 5. Merge after review.
-6. Build the static output with production variables using `npm run build:production`.
-7. Package the generated `dist/` contents, upload through Hostinger File Manager, and extract into `public_html` with overwrite enabled. The static bundle includes `.htaccess` for SPA fallback; live route verification remains required.
+6. GitHub Actions builds and verifies the static output with production variables using `npm run build:production`.
+7. After the required checks and Supabase preflight pass, GitHub Actions backs up the current Hostinger release, syncs the generated `dist/` contents into `public_html` over SSH, and verifies the production URL. A failed sync or health check restores the previous archive.
 
 ## Static build contract
 
@@ -29,11 +29,32 @@
 
 ## GitHub Actions deployment
 
-`.github/workflows/recipe-app-checks.yml` runs on pull requests and pushes to `main`/`master`. It runs `procedure checks` and `typecheck, test, and build` (`npm ci`, `npm run typecheck`, `npm test`, `npm run build` from `recipe_app/`). Pushes to `main` additionally run the configured production bundle check in the protected GitHub `production` environment. The workflow does not archive or upload `dist/`; Hostinger deployment remains a separate release step.
+`.github/workflows/recipe-app-checks.yml` runs on pull requests and pushes to `main`/`master`. Pull requests run repository-local checks without live-project secrets. Pushes to `main` additionally build the configured production bundle, run the mandatory Supabase integration and preflight checks, back up the current Hostinger release outside the web root, sync `dist/` to Hostinger over SSH, and run `scripts/verify-production-site.sh` against the root page, every referenced asset, and the `/recipes/new` SPA route. The deployment job uses the protected GitHub `production` environment and a concurrency lock so only one production release runs at a time.
 
 ## Secrets
 
 Local secrets live in an ignored `.env.local`. Configure `SUPABASE_PRODUCTION_URL` and `SUPABASE_PRODUCTION_ANON_KEY` as secrets in GitHub's protected `production` environment. Hostinger must receive the same production URL and publishable/anonymous key through its environment/build configuration. Never commit real Supabase keys or OAuth secrets.
+
+The automatic Hostinger deployment additionally requires these `production`
+environment secrets: `HOSTINGER_SSH_HOST`, `HOSTINGER_SSH_PORT`,
+`HOSTINGER_SSH_USER`, `HOSTINGER_SSH_PRIVATE_KEY`, `HOSTINGER_KNOWN_HOSTS`, and
+`HOSTINGER_DEPLOY_PATH` (the site's `public_html` path). The workflow creates a
+compressed backup in the sibling `.deploy-backups/` directory outside the web
+root before syncing the verified bundle. The production preflight also requires
+`SUPABASE_PREFLIGHT_URL`, `SUPABASE_PREFLIGHT_ANON_KEY`,
+`SUPABASE_PREFLIGHT_SERVICE_ROLE_KEY`, `SUPABASE_PREFLIGHT_DB_URL`,
+`SUPABASE_PREFLIGHT_ORIGIN`, `SUPABASE_PREFLIGHT_QUEUE_ENABLED`, and
+`SUPABASE_PREFLIGHT_WORKER_TOKEN`; `SUPABASE_PREFLIGHT_QUEUE_READY` is required
+when queue mode is enabled. Push verification also requires
+`SUPABASE_TEST_URL` and `SUPABASE_TEST_ANON_KEY`, which are also scoped to the
+protected `production` environment.
+
+The deployment smoke check retries transient HTTP failures and verifies the
+static app shell, every asset referenced by `index.html`, and the `/recipes/new`
+SPA fallback route. It does not execute the browser application or authenticate;
+browser-level boot, public reset-password rendering, protected-route lazy loading,
+and unauthenticated redirects run in the CI app job and after production deploy
+with Playwright. Authentication itself remains a manual post-release check.
 
 ## Recipe import deployment
 
@@ -58,7 +79,7 @@ The repository does not contain the Gemini credential or a provider health-check
 
 ## Rollback
 
-The MVP rollback is owner-managed: retain the previous production archive in `public_html` until the new release passes live verification. If needed, extract that archive into `public_html` with overwrite enabled, then reload the production URL and verify the login route, SPA navigation, and authentication flow. Automated rollback and rollback rehearsal are not part of the current hosting workflow.
+The workflow retains the previous production archive outside `public_html` and automatically restores it when synchronization or the production health check fails, then checks that the restored site responds. After a successful release, the owner should still verify the login route, SPA navigation, and authentication flow. Manual rollback remains available by extracting the retained archive into `public_html` with overwrite enabled.
 
 ## Verified production release
 

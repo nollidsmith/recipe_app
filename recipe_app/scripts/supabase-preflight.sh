@@ -1,11 +1,10 @@
 #!/usr/bin/env sh
 # Validate a configured Supabase environment before enabling recipe import.
 #
-# This is deliberately an HTTP preflight: it needs only the publishable key and
-# the private worker token, so it can run without a paid test project or a
-# database password. When no preflight environment is configured it reports a
-# safe skip. Once any preflight value is supplied, incomplete configuration or
-# any failed probe exits non-zero.
+# This preflight checks the HTTP and database surfaces before deployment. When
+# no preflight environment is configured it reports a safe skip. Once any
+# preflight value is supplied, incomplete configuration or any failed probe
+# exits non-zero.
 
 set -eu
 
@@ -111,10 +110,43 @@ curl --silent --show-error --fail --output /dev/null \
   -H "Authorization: Bearer $SUPABASE_PREFLIGHT_SERVICE_ROLE_KEY" \
   || fail "recipe_imports migration is not applied or is not reachable"
 
-command -v supabase >/dev/null 2>&1 \
-  || fail "Supabase CLI is required for database-level preflight verification"
-db_check=$(supabase db query --db-url "$SUPABASE_PREFLIGHT_DB_URL" --read-only --output-format json \
-  "select json_build_object('recipe_imports', to_regclass('public.recipe_imports') is not null, 'migration_set', case when to_regclass('supabase_migrations.schema_migrations') is null then false else (select count(*) = 7 from supabase_migrations.schema_migrations where version in ('20261120000000','20261120000100','20261120000200','20261120000300','20261120000400','20261120000500','20261120000600')) end, 'provider_schema', (select count(*) = 6 from information_schema.columns where table_schema = 'public' and table_name = 'recipe_imports' and column_name in ('draft_json','confidence_json','warnings_json','error_code','attempt_count','provider_request_id')), 'import_policies', (select count(*) >= 2 from pg_policies where schemaname = 'public' and tablename = 'recipe_imports'), 'storage_policies', (select count(*) >= 3 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname like '%recipe import%'), 'pgmq', to_regclass('pgmq.q_recipe_imports') is not null, 'pg_cron', to_regclass('cron.job') is not null, 'worker_schedule', case when to_regclass('cron.job') is null then false else exists (select 1 from cron.job where jobname = 'recipe-import-worker') end, 'cleanup_schedule', case when to_regclass('cron.job') is null then false else exists (select 1 from cron.job where jobname = 'recipe-import-source-cleanup') end, 'vault', to_regclass('vault.decrypted_secrets') is not null) as checks;") \
+command -v psql >/dev/null 2>&1 \
+  || fail "PostgreSQL client is required for database-level preflight verification"
+command -v python3 >/dev/null 2>&1 \
+  || fail "Python 3 is required for database-level preflight verification"
+pgpass="$tmp/pgpass"
+pgparams="$tmp/pgparams"
+old_umask=$(umask)
+umask 077
+printf '%s' "$SUPABASE_PREFLIGHT_DB_URL" | python3 -c '
+import sys
+from pathlib import Path
+from urllib.parse import unquote, urlsplit
+
+url = sys.stdin.read()
+parsed = urlsplit(url)
+if parsed.scheme not in {"postgres", "postgresql"} or not parsed.hostname or not parsed.username or parsed.password is None:
+    raise SystemExit("invalid PostgreSQL connection URL")
+
+host = parsed.hostname
+port = parsed.port or 5432
+database = parsed.path.lstrip("/") or "postgres"
+user = unquote(parsed.username)
+password = unquote(parsed.password).replace("\\", "\\\\").replace(":", "\\:")
+Path(sys.argv[1]).write_text(f"{host}:{port}:{database}:{user}:{password}\\n")
+Path(sys.argv[2]).write_text(f"{host}\\n{port}\\n{database}\\n{user}\\n")
+' "$pgpass" "$pgparams" \
+  || fail "invalid PostgreSQL connection URL"
+chmod 600 "$pgpass"
+umask "$old_umask"
+IFS= read -r db_host < "$pgparams"
+db_port=$(sed -n '2p' "$pgparams")
+db_name=$(sed -n '3p' "$pgparams")
+db_user=$(sed -n '4p' "$pgparams")
+db_check=$(PGPASSFILE="$pgpass" psql \
+  "host=$db_host" "port=$db_port" "dbname=$db_name" "user=$db_user" \
+  sslmode=require --tuples-only --no-align --command \
+  "select json_build_object('recipe_imports', to_regclass('public.recipe_imports') is not null, 'migration_set', case when to_regclass('supabase_migrations.schema_migrations') is null then false else (select count(*) = 7 from supabase_migrations.schema_migrations where version in ('20261120000000','20261120000100','20261120000200','20261120000300','20261120000400','20261120000500','20261120000600')) end, 'provider_schema', (select count(*) = 6 from information_schema.columns where table_schema = 'public' and table_name = 'recipe_imports' and column_name in ('draft_json','confidence_json','warnings_json','error_code','attempt_count','provider_request_id')), 'import_policies', (select count(*) >= 2 from pg_policies where schemaname = 'public' and tablename = 'recipe_imports'), 'storage_policies', (select count(*) >= 3 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname like '%recipe import%'), 'pgmq', to_regclass('pgmq.q_recipe_imports') is not null, 'pg_cron', to_regclass('cron.job') is not null, 'worker_schedule', case when to_regclass('cron.job') is null then false else exists (select 1 from cron.job where jobname = 'recipe-import-worker') end, 'cleanup_schedule', case when to_regclass('cron.job') is null then false else exists (select 1 from cron.job where jobname = 'recipe-import-source-cleanup') end, 'vault', to_regclass('vault.decrypted_secrets') is not null) as checks;" 2>/dev/null) \
   || fail "database-level preflight query failed"
 printf '%s' "$db_check" | grep -Fq '"recipe_imports":true' \
   || fail "recipe_imports table is missing"

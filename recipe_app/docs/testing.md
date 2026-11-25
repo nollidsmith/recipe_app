@@ -57,10 +57,20 @@ The root workflow runs procedure checks plus `npm ci`, `npm run typecheck`,
 `npm test`, `npm run build`, build-artifact checks, and a conditional Supabase
 integration smoke job from `recipe_app/`. The live job is skipped explicitly
 until `SUPABASE_TEST_URL` and `SUPABASE_TEST_ANON_KEY` are configured. There are no
-configured coverage thresholds/reports, formatting or lint checks, live Supabase
-integration tests, end-to-end tests, full axe accessibility automation, RLS/Storage
+configured coverage thresholds/reports, formatting or lint checks, full axe accessibility automation, RLS/Storage
 security tests, oversized-image tests, or image-dimension tests. The build passes
 with a non-failing approximately 503.10 kB main-bundle warning.
 
-<!-- update-this-doc-when: package.json, src/test/**, scripts/**, supabase/tests/**, .github/workflows/recipe-app-checks.yml -->
+## Browser smoke tests
+
+`npm run test:browser` runs Playwright against the production preview. It uses
+placeholder Supabase browser configuration and mocks only the unauthenticated
+session response, so it does not require production credentials. The suite
+checks app boot, login and password-reset routing, protected-route lazy chunks,
+unauthenticated redirects, browser errors, and failed asset requests. The same
+suite runs against the deployed production URL after synchronization and again
+after rollback. Authenticated flows remain manual until a dedicated non-
+production test environment and disposable test account exist.
+
+<!-- update-this-doc-when: package.json, src/test/**, browser-tests/**, playwright.config.ts, scripts/**, supabase/tests/**, .github/workflows/recipe-app-checks.yml -->
 
