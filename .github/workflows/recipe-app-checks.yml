@@ -65,10 +65,37 @@ jobs:
         run: npm run typecheck
 
       - name: Run tests
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_ANON_KEY: ci-test-anon-key
         run: npm test
 
       - name: Build production bundle
         run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser smoke tests
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_ANON_KEY: browser-smoke-anon-key
+        run: |
+          npm run build
+          npm run test:browser
+
+      - name: Verify build artifact
+        run: sh scripts/verify-build-artifact.sh
+
+      - name: Verify recipe import security contracts
+        run: sh scripts/test/test-recipe-import-contract.sh
+
+      - name: Run fresh migration verification when configured
+        if: github.event_name == 'push'
+        env:
+          SUPABASE_MIGRATION_TEST_DB_URL: ${{ secrets.SUPABASE_MIGRATION_TEST_DB_URL }}
+          SUPABASE_MIGRATION_TEST_CONFIRM: ${{ secrets.SUPABASE_MIGRATION_TEST_CONFIRM }}
+        run: sh scripts/test/test-fresh-migrations.sh
 
   production-bundle:
     name: configured production bundle
@@ -93,3 +120,206 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.SUPABASE_PRODUCTION_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_PRODUCTION_ANON_KEY }}
         run: npm run build:production
+
+  supabase-integration:
+    name: Supabase integration smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    defaults:
+      run:
+        working-directory: recipe_app
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Run live Supabase smoke checks
+        if: github.event_name == 'push'
+        env:
+          SUPABASE_TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          SUPABASE_TEST_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+        run: |
+          : "${SUPABASE_TEST_URL:?SUPABASE_TEST_URL is required for push verification}"
+          : "${SUPABASE_TEST_ANON_KEY:?SUPABASE_TEST_ANON_KEY is required for push verification}"
+          sh scripts/run-supabase-integration-tests.sh
+
+  supabase-preflight:
+    name: Supabase configured-environment preflight
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    defaults:
+      run:
+        working-directory: recipe_app
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Run configured Supabase preflight
+        env:
+          SUPABASE_PREFLIGHT_URL: ${{ secrets.SUPABASE_PREFLIGHT_URL }}
+          SUPABASE_PREFLIGHT_ANON_KEY: ${{ secrets.SUPABASE_PREFLIGHT_ANON_KEY }}
+          SUPABASE_PREFLIGHT_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_PREFLIGHT_SERVICE_ROLE_KEY }}
+          SUPABASE_PREFLIGHT_DB_URL: ${{ secrets.SUPABASE_PREFLIGHT_DB_URL }}
+          SUPABASE_PREFLIGHT_ORIGIN: ${{ secrets.SUPABASE_PREFLIGHT_ORIGIN }}
+          SUPABASE_PREFLIGHT_QUEUE_ENABLED: ${{ secrets.SUPABASE_PREFLIGHT_QUEUE_ENABLED }}
+          SUPABASE_PREFLIGHT_QUEUE_READY: ${{ secrets.SUPABASE_PREFLIGHT_QUEUE_READY }}
+          SUPABASE_PREFLIGHT_WORKER_TOKEN: ${{ secrets.SUPABASE_PREFLIGHT_WORKER_TOKEN }}
+        run: |
+          : "${SUPABASE_PREFLIGHT_URL:?SUPABASE_PREFLIGHT_URL is required for production deployment}"
+          : "${SUPABASE_PREFLIGHT_ANON_KEY:?SUPABASE_PREFLIGHT_ANON_KEY is required for production deployment}"
+          : "${SUPABASE_PREFLIGHT_SERVICE_ROLE_KEY:?SUPABASE_PREFLIGHT_SERVICE_ROLE_KEY is required for production deployment}"
+          : "${SUPABASE_PREFLIGHT_DB_URL:?SUPABASE_PREFLIGHT_DB_URL is required for production deployment}"
+          : "${SUPABASE_PREFLIGHT_ORIGIN:?SUPABASE_PREFLIGHT_ORIGIN is required for production deployment}"
+          : "${SUPABASE_PREFLIGHT_QUEUE_ENABLED:?SUPABASE_PREFLIGHT_QUEUE_ENABLED is required for production deployment}"
+          : "${SUPABASE_PREFLIGHT_WORKER_TOKEN:?SUPABASE_PREFLIGHT_WORKER_TOKEN is required for production deployment}"
+          sh scripts/supabase-preflight.sh
+
+  deploy-production:
+    name: deploy static bundle to Hostinger
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [procedure, app, production-bundle, supabase-integration, supabase-preflight]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    concurrency:
+      group: pantrypilot-production
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: recipe_app
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and verify production bundle
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_PRODUCTION_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_PRODUCTION_ANON_KEY }}
+        run: npm run build:production
+
+      - name: Configure Hostinger SSH
+        env:
+          HOSTINGER_KNOWN_HOSTS: ${{ secrets.HOSTINGER_KNOWN_HOSTS }}
+          HOSTINGER_SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+        run: |
+          : "${HOSTINGER_KNOWN_HOSTS:?HOSTINGER_KNOWN_HOSTS is required}"
+          : "${HOSTINGER_SSH_PRIVATE_KEY:?HOSTINGER_SSH_PRIVATE_KEY is required}"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$HOSTINGER_SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$HOSTINGER_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_ed25519" "$HOME/.ssh/known_hosts"
+
+      - name: Back up current Hostinger release
+        id: backup
+        env:
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_DEPLOY_PATH: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
+        run: |
+          : "${HOSTINGER_SSH_HOST:?HOSTINGER_SSH_HOST is required}"
+          : "${HOSTINGER_SSH_PORT:?HOSTINGER_SSH_PORT is required}"
+          : "${HOSTINGER_SSH_USER:?HOSTINGER_SSH_USER is required}"
+          : "${HOSTINGER_DEPLOY_PATH:?HOSTINGER_DEPLOY_PATH is required}"
+          case "$HOSTINGER_SSH_PORT" in
+            ''|*[!0-9]*) printf '%s\n' "HOSTINGER_SSH_PORT must be numeric" >&2; exit 1 ;;
+          esac
+          test "$HOSTINGER_SSH_PORT" -ge 1
+          test "$HOSTINGER_SSH_PORT" -le 65535
+          case "$HOSTINGER_DEPLOY_PATH" in
+            /*) ;;
+            *) printf '%s\n' "HOSTINGER_DEPLOY_PATH must be an absolute path" >&2; exit 1 ;;
+          esac
+          case "$HOSTINGER_DEPLOY_PATH" in
+            ''|/|.|..|*/../*|*/./*|*/..|*/.|*[[:space:]\'\;\&\|]*)
+              printf '%s\n' "HOSTINGER_DEPLOY_PATH must be a non-root path without traversal or shell metacharacters" >&2
+              exit 1
+              ;;
+          esac
+          backup_path="${HOSTINGER_DEPLOY_PATH%/}.deploy-backups"
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 -i "$HOME/.ssh/id_ed25519" -p "$HOSTINGER_SSH_PORT" "$HOSTINGER_SSH_USER@$HOSTINGER_SSH_HOST" \
+            "mkdir -p '$backup_path' && tar --exclude='./.deploy-backups' -czf '$backup_path/pantrypilot-${GITHUB_SHA}.tgz' -C '$HOSTINGER_DEPLOY_PATH' . && find '$backup_path' -mindepth 1 -maxdepth 1 -type f -name 'pantrypilot-*.tgz' -printf '%T@ %p\\n' | sort -nr | tail -n +6 | cut -d' ' -f2- | xargs -r rm -f"
+
+      - name: Sync bundle to Hostinger
+        id: sync
+        env:
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_DEPLOY_PATH: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
+        run: |
+          : "${HOSTINGER_SSH_HOST:?HOSTINGER_SSH_HOST is required}"
+          : "${HOSTINGER_SSH_PORT:?HOSTINGER_SSH_PORT is required}"
+          : "${HOSTINGER_SSH_USER:?HOSTINGER_SSH_USER is required}"
+          : "${HOSTINGER_DEPLOY_PATH:?HOSTINGER_DEPLOY_PATH is required}"
+          case "$HOSTINGER_SSH_PORT" in
+            ''|*[!0-9]*) printf '%s\n' "HOSTINGER_SSH_PORT must be numeric" >&2; exit 1 ;;
+          esac
+          test "$HOSTINGER_SSH_PORT" -ge 1
+          test "$HOSTINGER_SSH_PORT" -le 65535
+          case "$HOSTINGER_DEPLOY_PATH" in
+            /*) ;;
+            *) printf '%s\n' "HOSTINGER_DEPLOY_PATH must be an absolute path" >&2; exit 1 ;;
+          esac
+          case "$HOSTINGER_DEPLOY_PATH" in
+            ''|/|.|..|*/../*|*/./*|*/..|*/.|*[[:space:]\'\;\&\|]*)
+              printf '%s\n' "HOSTINGER_DEPLOY_PATH must be a non-root path without traversal or shell metacharacters" >&2
+              exit 1
+              ;;
+          esac
+          rsync -az --delete --exclude='.deploy-backups/' \
+            -e "ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 -i $HOME/.ssh/id_ed25519 -p $HOSTINGER_SSH_PORT" \
+            dist/ "$HOSTINGER_SSH_USER@$HOSTINGER_SSH_HOST:${HOSTINGER_DEPLOY_PATH%/}/"
+
+      - name: Verify production health
+        id: health
+        run: sh scripts/verify-production-site.sh https://recipe.dillonlsmith.com
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run production browser smoke tests
+        env:
+          SMOKE_BASE_URL: https://recipe.dillonlsmith.com
+        run: npm run test:browser
+
+      - name: Summarize successful deployment
+        if: ${{ success() }}
+        run: |
+          {
+            printf '%s\n' '## Production deployment succeeded'
+            printf '%s\n' "- Commit: \`$GITHUB_SHA\`"
+            printf '%s\n' '- Static smoke check: passed'
+            printf '%s\n' '- Backup: retained outside the web root'
+            printf '%s\n' '- Follow-up: manually verify login, navigation, and authentication'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Restore previous Hostinger release after failed deployment
+        if: ${{ failure() && steps.backup.outcome == 'success' }}
+        env:
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_DEPLOY_PATH: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
+        run: |
+          backup_path="${HOSTINGER_DEPLOY_PATH%/}.deploy-backups/pantrypilot-${GITHUB_SHA}.tgz"
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 -i "$HOME/.ssh/id_ed25519" -p "$HOSTINGER_SSH_PORT" "$HOSTINGER_SSH_USER@$HOSTINGER_SSH_HOST" \
+            "cd '$HOSTINGER_DEPLOY_PATH' && find . -mindepth 1 -maxdepth 1 -exec rm -rf -- {} + && tar -xzf '$backup_path'"
+          sh scripts/verify-production-site.sh https://recipe.dillonlsmith.com
+          SMOKE_BASE_URL=https://recipe.dillonlsmith.com npm run test:browser
+          {
+            printf '%s\n' '## Production deployment rolled back'
+            printf '%s\n' "- Failed commit: \`$GITHUB_SHA\`"
+            printf '%s\n' '- Previous release restored and smoke-checked'
+          } >> "$GITHUB_STEP_SUMMARY"

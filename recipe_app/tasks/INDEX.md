@@ -37,3 +37,11 @@
 
 - 4.1 Add mobile navigation and feedback polish — completed (T-006)
 
+## Section 5 — Recipe import
+
+- 5.1 Import a PDF or paper recipe into an editable draft — in progress (T-009)
+
+## Section 6 — Production delivery
+
+- 6.1 Automate protected Hostinger production deployment — in progress (T-018)
+
