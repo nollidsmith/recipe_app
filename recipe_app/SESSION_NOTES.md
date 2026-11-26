@@ -16,3 +16,8 @@ Use this file for concise handoff context between sessions.
   browser tests pass.
 - Next external step is configuring the GitHub `production` environment secrets;
   do not make that change or push until release confirmation is received.
+- Fixed the local rollback bug in `.github/workflows/recipe-app-checks.yml` so
+  automatic restoration preserves `.deploy-backups` while clearing the web root.
+- After the fix, typecheck, Vitest (13 files / 45 tests), build, and CI preflight
+  regression checks pass. The first live deployment and external secret
+  configuration remain outstanding.

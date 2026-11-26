@@ -315,7 +315,7 @@ jobs:
         run: |
           backup_path="${HOSTINGER_DEPLOY_PATH%/}.deploy-backups/pantrypilot-${GITHUB_SHA}.tgz"
           ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 -i "$HOME/.ssh/id_ed25519" -p "$HOSTINGER_SSH_PORT" "$HOSTINGER_SSH_USER@$HOSTINGER_SSH_HOST" \
-            "cd '$HOSTINGER_DEPLOY_PATH' && find . -mindepth 1 -maxdepth 1 -exec rm -rf -- {} + && tar -xzf '$backup_path'"
+            "cd '$HOSTINGER_DEPLOY_PATH' && find . -mindepth 1 -maxdepth 1 ! -name '.deploy-backups' -exec rm -rf -- {} + && tar -xzf '$backup_path'"
           sh scripts/verify-production-site.sh https://recipe.dillonlsmith.com
           SMOKE_BASE_URL=https://recipe.dillonlsmith.com npm run test:browser
           {
